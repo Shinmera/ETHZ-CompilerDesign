@@ -1,0 +1,18 @@
+class Main {
+   void main() {
+      int r1;
+      int i0,  i1;
+		
+      i0 = 5;
+      i1 = 2;
+		
+      r1 = i1 * 3;
+      write(r1); writeln();
+
+      r1 = i0 * i1;
+      write(r1); writeln();
+	
+      r1 = r1 * i0 * i1 * 3;
+      write(r1); writeln();
+   }
+}
