@@ -87,8 +87,8 @@ class StmtGenerator extends AstVisitor<Register, Void> {
         Register place = this.visit(ast.left(), arg);
         Register value = this.visit(ast.right(), arg);
         cg.emit.emit("movl", value, "("+place.repr+")");
-        cg.rm.freeRegister(place);
-        cg.rm.freeRegister(value);
+        cg.rm.releaseRegister(place);
+        cg.rm.releaseRegister(value);
         return null;
     }
 
