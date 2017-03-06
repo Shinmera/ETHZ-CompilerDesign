@@ -1,5 +1,6 @@
 package cd.backend.codegen;
 
+import cd.Config;
 import cd.ToDoException;
 import cd.backend.codegen.RegisterManager.Register;
 import cd.ir.Ast;
@@ -9,6 +10,7 @@ import cd.ir.Ast.BuiltInWriteln;
 import cd.ir.Ast.IfElse;
 import cd.ir.Ast.MethodCall;
 import cd.ir.Ast.MethodDecl;
+import cd.ir.Ast.VarDecl;
 import cd.ir.Ast.WhileLoop;
 import cd.ir.AstVisitor;
 import cd.util.debug.AstOneLine;
@@ -46,11 +48,18 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
     @Override
     public Register methodDecl(MethodDecl ast, Void arg) {
-        {
-            // Because we only handle very simple programs in HW1,
-            // you can just emit the prologue here!
-            throw new ToDoException();
-        }
+        // Dumb, global space for now.
+    	cg.emit.emitRaw(".data");
+    	cg.emit.emitRaw("printfinteger: "+Config.DOT_STRING+" \"%d\"");
+    	cg.emit.emitRaw("scanfinteger: "+Config.DOT_STRING+" \"%d\"");
+    	cg.emit.emitRaw("printfnewline: "+Config.DOT_STRING+" \"\\n\"");
+    	this.visit(ast.decls(), arg);
+    	cg.emit.emitRaw(".text");
+    	cg.emit.emitRaw(".global "+ast.name);
+    	cg.emit.emitRaw(".text");
+    	cg.emit.emitRaw(ast.name+":");
+    	this.visit(ast.body(), arg);
+    	return null;
     }
 
     @Override
@@ -66,72 +75,52 @@ class StmtGenerator extends AstVisitor<Register, Void> {
             throw new RuntimeException("Not required");
         }
     }
+    
+    @Override
+    public Register varDecl(VarDecl ast, Void arg){
+    	cg.emit.emitRaw("var"+ast.name+": "+Config.DOT_INT+" 0");
+        return null;
+    }
 
     @Override
     public Register assign(Assign ast, Void arg) {
-        {
-            // Because we only handle very simple programs in HW1,
-            // you can just emit the prologue here!
-            throw new ToDoException();
-        }
-    }
-
-    private Register printf(String format, T...args){
-        // Transform format string into word sized chunks of bytes.
-        int[] words = new int[format.length/4+2];
-        int space = words.length+2;
-        for(int i=0; i<words.length; i++){
-            
-        }
-        Register retval = cg.rm.getRegister();
-        cg.emit.emit("movl", "%eax", retval);
-        // Prepare stack and load up the format string.
-        cg.emit.emit("subl", "$"+space, "%esp");
-        for(int i=0; i<words.length; i++){
-            cg.emit.emit("movl", "$"+words[i], (4*i)+"(%esp)");
-        }
-        // Load up the 
-        for(int i=0; i<args.length; i++){
-            cg.emit.emit("movl", args[i], "(%esp)");
-        }
-        cg.emit.emit("call", cd.Config.PRINTF);
-        // Clean up and return.
-        cg.emit.emit("addl", "$"+space, "%esp");
-        cg.emit.emit("xchg", "%eax", retval);
-        return retval;
+        Register place = this.visit(ast.left(), arg);
+        Register value = this.visit(ast.right(), arg);
+        cg.emit.emit("movl", value, "("+place.repr+")");
+        cg.rm.freeRegister(place);
+        cg.rm.freeRegister(value);
+        return null;
     }
 
     @Override
     public Register builtInWrite(BuiltInWrite ast, Void arg) {
-        // Save EAX in case it's used
-        Register retval = cg.rm.getRegister();
-        cg.emit.emit("movl", "%eax", retval);
-        // Perform the call as usual
-        Register value = this.visit(ast.arg(), arg);
-        cg.emit.emit("subl", "$8", "%esp");
-        cg.emit.emit("movl", value, "4(%esp)");
-        cg.emit.emit("movl", "$printfinteger", "0(%esp)");
-        cg.emit.emit("call", cd.Config.PRINTF);
-        cg.emit.emit("addl", "$8", "%esp");
-        cg.rm.releaseRegister(value);
-        // Swap out the return value in EAX
-        cg.emit.emit("xchg", retval, "%eax");
-        return retval;
+    	// I had code here that returned the value from the PRINTF
+    	// call, but apparently Registers from a top-level method
+    	// expression are not being used in any way anyway, so...
+        //
+        // Hooray for built-in memory (register) leaks from the
+        // provided framework.
+    	cg.withRegistersSaved(()->{
+                Register value = this.visit(ast.arg(), arg);
+                cg.emit.emit("subl", "$8", "%esp");
+                cg.emit.emit("movl", value, "4(%esp)");
+                cg.emit.emit("movl", "$printfinteger", "0(%esp)");
+                cg.emit.emit("call", cd.Config.PRINTF);
+                cg.emit.emit("addl", "$8", "%esp");
+                cg.rm.releaseRegister(value);
+            }, "%eax");
+        return null;
     }
 
     @Override
     public Register builtInWriteln(BuiltInWriteln ast, Void arg) {
-        // Save EAX in case it's used
-        Register retval = cg.rm.getRegister();
-        cg.emit.emit("movl", "%eax", retval);
-        // Perform the call as usual
-        cg.emit.emit("subl", "$4", "%esp");
-        cg.emit.emit("movl", "$printfnewline", "0(%esp)");
-        cg.emit.emit("call", cd.Config.PRINTF);
-        cg.emit.emit("addl", "$4", "%esp");
-        // Swap out the return value in EAX
-        cg.emit.emit("xchg", retval, "%eax");
-        return value;
+        cg.withRegistersSaved(()->{
+                cg.emit.emit("subl", "$4", "%esp");
+                cg.emit.emit("movl", "$printfnewline", "0(%esp)");
+                cg.emit.emit("call", cd.Config.PRINTF);
+                cg.emit.emit("addl", "$4", "%esp");
+            }, "%eax");
+        return null;
     }
 
 }

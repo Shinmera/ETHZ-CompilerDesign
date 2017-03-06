@@ -42,7 +42,6 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         } finally {
             cg.emit.decreaseIndent();
         }
-
     }
 
     @Override
@@ -52,24 +51,35 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 
         switch(ast.operator){
         case B_TIMES:
-            cg.emit.emit("imul", right, left);
+            cg.emit.emit("imull", right, left);
             break;
         case B_DIV:
-            cg.emit.emit("idiv", right, left);
+            cg.withRegistersSaved(() -> {
+                    cg.emit.emit("movl", "$0", "%rdx");
+                    cg.emit.emit("movl", left, "%rax");
+                    cg.emit.emit("idivl", right);
+                    cg.emit.emit("movl", "%rax", left);
+                }, "%rdx", "%rax");
             break;
         case B_MOD:
+            cg.withRegistersSaved(() -> {
+                    cg.emit.emit("movl", "$0", "%rdx");
+                    cg.emit.emit("movl", left, "%rax");
+                    cg.emit.emit("idivl", right);
+                    cg.emit.emit("movl", "%rdx", left);
+                }, "%rdx", "%rax");
             break;
         case B_PLUS:
-            cg.emit.emit("add", right, left);
+            cg.emit.emit("addl", right, left);
             break;
         case B_MINUS:
-            cg.emit.emit("sub", right, left);
+            cg.emit.emit("subl", right, left);
             break;
         case B_AND:
-            cg.emit.emit("and", right, left);
+            cg.emit.emit("andl", right, left);
             break;
         case B_OR:
-            cg.emit.emit("or", right, left);
+            cg.emit.emit("orl", right, left);
             break;
         case B_EQUAL:
         case B_NOT_EQUAL:
@@ -77,6 +87,29 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         case B_LESS_OR_EQUAL:
         case B_GREATER_THAN:
         case B_GREATER_OR_EQUAL:
+            cg.emit.emit("cmpl", right, left);
+            cg.emit.emit("movl", "$0", left);
+            switch(ast.operator){
+            case B_EQUAL:
+                cg.emit.emit("cmove", "$1", left);
+                break;
+            case B_NOT_EQUAL:
+                cg.emit.emit("cmovne", "$1", left);
+                break;
+            case B_LESS_THAN:
+                cg.emit.emit("cmovl", "$1", left);
+                break;
+            case B_LESS_OR_EQUAL:
+                cg.emit.emit("cmovle", "$1", left);
+                break;
+            case B_GREATER_THAN:
+                cg.emit.emit("cmovg", "$1", left);
+                break;
+            case B_GREATER_OR_EQUAL:
+                cg.emit.emit("cmovge", "$1", left);
+                break;
+            }
+            break;
         }
 
         cg.rm.releaseRegister(right);
@@ -93,16 +126,18 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     @Override
     public Register builtInRead(BuiltInRead ast, Void arg) {
         Register value = cg.rm.getRegister();
-        // Reserve stack space and load variable address into register
-        cg.emit.emit("subl", "$12", "%esp");
-        cg.emit.emit("leal", "8(%esp)", value);
-        // Preprare stack and call scanf
-        cg.emit.emit("movl", value, "4(%esp)");
-        cg.emit.emit("movl", "$scanfinteger", "0(%esp)");
-        cg.emit.emit("call", cd.Config.SCANF);
-        // Read value out of the stack and free the allocated space
-        cg.emit.emit("movl", "8(%esp)", value);
-        cg.emit.emit("addl", "$12", "%esp");
+        cg.withRegistersSaved(()->{
+                // Reserve stack space and load variable address into register
+                cg.emit.emit("subl", "$12", "%esp");
+                cg.emit.emit("leal", "8(%esp)", value);
+                // Preprare stack and call scanf
+                cg.emit.emit("movl", value, "4(%esp)");
+                cg.emit.emit("movl", "$scanfinteger", "0(%esp)");
+                cg.emit.emit("call", cd.Config.SCANF);
+                // Read value out of the stack and free the allocated space
+                cg.emit.emit("movl", "8(%esp)", value);
+                cg.emit.emit("addl", "$12", "%esp");
+            }, "%eax");
         return value;
     }
 
@@ -167,10 +202,10 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     	Register value = this.visit(ast.arg(), arg);
     	switch(ast.operator){
     	case U_BOOL_NOT:
-    		cg.emit.emit("not", value);
+    		cg.emit.emit("notl", value);
     		break;
     	case U_MINUS:
-    		cg.emit.emit("neg", value);
+    		cg.emit.emit("negl", value);
     		break;
     	case U_PLUS:
     		break;
@@ -180,9 +215,9 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         
     @Override
     public Register var(Var ast, Void arg) {
-        {
-            throw new ToDoException();
-        }
+    	Register place = cg.rm.getRegister();
+    	cg.emit.emit("leal", "$var"+ast.name, place);
+    	return place;
     }
 
 }
