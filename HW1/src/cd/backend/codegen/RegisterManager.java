@@ -77,6 +77,13 @@ public class RegisterManager {
             return repr;
         }
     }
+    
+    // This was not present for whatever reason, causing the
+    // register manager to always be empty and have no registers
+    // available. WTF?
+    public RegisterManager(){
+    	initRegisters();
+    }
 
     /**
      * Reset all general purpose registers to free
@@ -92,8 +99,7 @@ public class RegisterManager {
     public Register getRegister() {
         int last = registers.size() - 1;
         if (last < 0)
-            throw new AssemblyFailedException(
-                                              "Program requires too many registers");
+            throw new AssemblyFailedException("Program requires too many registers");
 
         return registers.remove(last);
     }
