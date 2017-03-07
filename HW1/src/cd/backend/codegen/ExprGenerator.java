@@ -43,11 +43,17 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
             cg.emit.decreaseIndent();
         }
     }
-
+    
     @Override
     public Register binaryOp(BinaryOp ast, Void arg) {
-        Register left = this.visit(ast.left(), arg);
-        Register right = this.visit(ast.right(), arg);
+    	Register right, left;
+    	if(ast.left() instanceof BinaryOp){
+            left = this.visit(ast.left(), arg);
+            right = this.visit(ast.right(), arg);
+    	}else{
+            right = this.visit(ast.right(), arg);
+            left = this.visit(ast.left(), arg);
+    	}
 
         switch(ast.operator){
         case B_TIMES:
@@ -202,13 +208,13 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     	Register value = this.visit(ast.arg(), arg);
     	switch(ast.operator){
     	case U_BOOL_NOT:
-    		cg.emit.emit("notl", value);
-    		break;
+            cg.emit.emit("notl", value);
+            break;
     	case U_MINUS:
-    		cg.emit.emit("negl", value);
-    		break;
+            cg.emit.emit("negl", value);
+            break;
     	case U_PLUS:
-    		break;
+            break;
     	}
     	return value;
     }
@@ -216,7 +222,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     @Override
     public Register var(Var ast, Void arg) {
     	Register place = cg.rm.getRegister();
-    	cg.emit.emit("leal", "$var"+ast.name, place);
+    	cg.emit.emit("leal", "var"+ast.name, place);
     	return place;
     }
 
