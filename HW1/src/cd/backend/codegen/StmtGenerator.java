@@ -55,9 +55,9 @@ class StmtGenerator extends AstVisitor<Register, Void> {
     	cg.emit.emitRaw("printfnewline: "+Config.DOT_STRING+" \"\\n\"");
     	this.visit(ast.decls(), arg);
     	cg.emit.emitRaw(".text");
-    	cg.emit.emitRaw(".global "+ast.name);
+    	cg.emit.emitRaw(".global "+Config.MAIN);
     	cg.emit.emitRaw(".text");
-    	cg.emit.emitRaw(ast.name+":");
+    	cg.emit.emitRaw(Config.MAIN+":");
     	this.visit(ast.body(), arg);
     	return null;
     }
