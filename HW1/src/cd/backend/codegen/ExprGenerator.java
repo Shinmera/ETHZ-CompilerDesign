@@ -218,11 +218,11 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     	}
     	return value;
     }
-        
+    
     @Override
     public Register var(Var ast, Void arg) {
     	Register place = cg.rm.getRegister();
-    	cg.emit.emit("leal", "var"+ast.name, place);
+    	cg.emit.emit("movl", "var"+ast.name, place);
     	return place;
     }
 
