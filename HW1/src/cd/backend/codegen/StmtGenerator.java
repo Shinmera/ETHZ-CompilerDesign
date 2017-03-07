@@ -84,8 +84,8 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
     @Override
     public Register assign(Assign ast, Void arg) {
-        Register place = this.visit(ast.left(), arg);
-        Register value = this.visit(ast.right(), arg);
+        Register place = cg.eg.visit(ast.left(), arg);
+        Register value = cg.eg.visit(ast.right(), arg);
         cg.emit.emit("movl", value, "("+place.repr+")");
         cg.rm.releaseRegister(place);
         cg.rm.releaseRegister(value);
@@ -101,7 +101,7 @@ class StmtGenerator extends AstVisitor<Register, Void> {
         // Hooray for built-in memory (register) leaks from the
         // provided framework.
     	cg.withRegistersSaved(()->{
-                Register value = this.visit(ast.arg(), arg);
+                Register value = cg.eg.visit(ast.arg(), arg);
                 cg.emit.emit("subl", "$8", "%esp");
                 cg.emit.emit("movl", value, "4(%esp)");
                 cg.emit.emit("movl", "$printfinteger", "0(%esp)");
