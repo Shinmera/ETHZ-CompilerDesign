@@ -50,14 +50,14 @@ class StmtGenerator extends AstVisitor<Register, Void> {
     @Override
     public Register methodDecl(MethodDecl ast, Void arg) {
         // Dumb, global space for now.
-    	cg.emit.emitRaw(".data");
+    	cg.emit.emitRaw(Config.DATA_STR_SECTION);
     	cg.emit.emitRaw("printfinteger: "+Config.DOT_STRING+" \"%d\"");
     	cg.emit.emitRaw("scanfinteger: "+Config.DOT_STRING+" \"%d\"");
     	cg.emit.emitRaw("printfnewline: "+Config.DOT_STRING+" \"\\n\"");
+    	cg.emit.emitRaw(Config.DATA_INT_SECTION);
     	this.visit(ast.decls(), arg);
-    	cg.emit.emitRaw(".text");
+    	cg.emit.emitRaw(Config.TEXT_SECTION);
     	cg.emit.emitRaw(".global "+Config.MAIN);
-    	cg.emit.emitRaw(".text");
     	cg.emit.emitRaw(Config.MAIN+":");
     	this.visit(ast.body(), arg);
     	return null;
