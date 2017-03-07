@@ -60,11 +60,8 @@ class StmtGenerator extends AstVisitor<Register, Void> {
     	cg.emit.emitRaw(".global "+Config.MAIN);
     	cg.emit.emitRaw(Config.MAIN+":");
     	this.visit(ast.body(), arg);
-    	
-    	// Exit code 0
-    	cg.emit.emit("mov", "$0", "%eax");
+    	cg.emit.emit("movl", "$0", "%eax");
     	cg.emit.emitRaw("ret");
-    	
     	return null;
     }
 
@@ -108,8 +105,6 @@ class StmtGenerator extends AstVisitor<Register, Void> {
         // provided framework.
     	cg.withRegistersSaved(()->{
                 Register value = cg.eg.visit(ast.arg(), arg);
-                
-                
                 cg.emit.emit("subl", "$8", "%esp");
                 cg.emit.emit("movl", value, "4(%esp)");
                 cg.emit.emit("movl", "$printfinteger", "0(%esp)");
