@@ -10,6 +10,7 @@ import cd.ir.Ast.BuiltInWriteln;
 import cd.ir.Ast.IfElse;
 import cd.ir.Ast.MethodCall;
 import cd.ir.Ast.MethodDecl;
+import cd.ir.Ast.Var;
 import cd.ir.Ast.VarDecl;
 import cd.ir.Ast.WhileLoop;
 import cd.ir.AstVisitor;
@@ -84,7 +85,7 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
     @Override
     public Register assign(Assign ast, Void arg) {
-        Register place = cg.eg.visit(ast.left(), arg);
+        Register place = cg.sg.visit(ast.left(), arg);
         Register value = cg.eg.visit(ast.right(), arg);
         cg.emit.emit("movl", value, "("+place.repr+")");
         cg.rm.releaseRegister(place);
@@ -121,6 +122,13 @@ class StmtGenerator extends AstVisitor<Register, Void> {
                 cg.emit.emit("addl", "$4", "%esp");
             }, "%eax");
         return null;
+    } 
+    
+    @Override
+    public Register var(Var ast, Void arg) {
+    	Register place = cg.rm.getRegister();
+    	cg.emit.emit("leal", "var"+ast.name, place);
+    	return place;
     }
 
 }
