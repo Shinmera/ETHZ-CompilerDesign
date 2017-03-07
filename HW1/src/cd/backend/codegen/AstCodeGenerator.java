@@ -58,15 +58,14 @@ public class AstCodeGenerator {
     }
 
     public void withRegistersSaved(Runnable func, String...regs){
-        Register[] saves = new Register[regs.length];
-        for(int i=0; i<saves.length; i++){
-            saves[i] = rm.getRegister();
-            emit.emit("movl", regs[i], saves[i]);
+        for(int i=0; i<regs.length; i++){
+            emit.emit("subl", "$4", "%esp");
+            emit.emit("movl", regs[i], "0(%esp)");
         }
         func.run();
-        for(int i=0; i<saves.length; i++){
-            emit.emit("movl", saves[i], regs[i]);
-            rm.releaseRegister(saves[i]);
+        for(int i=regs.length-1; i>=0; i--){
+            emit.emit("movl", "0(%esp)", regs[i]);
+            emit.emit("addl", "$4", "%esp");
         }
     }
 }
