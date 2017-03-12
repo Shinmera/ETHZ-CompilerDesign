@@ -242,9 +242,6 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     public Register var(Var ast, Void arg) {
     	Register place = cg.rm.getRegister();
     	
-    	//TODO
-    	cg.emit.increaseIndent("Emitting varExpr");
-    	
     	cg.emit.emit("movl", "var"+ast.name, place);
     	return place;
     }
