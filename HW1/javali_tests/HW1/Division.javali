@@ -1,0 +1,8 @@
+class Main {
+	void main() {
+		write(8/4); writeln();
+		write(6/3); writeln();
+		write(5/2); writeln();
+		write(2/4); writeln();
+	}
+}
