@@ -60,20 +60,38 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
             cg.emit.emit("imull", right, left);
             break;
         case B_DIV:
+        	
+            cg.emit.emit("movl", left, "%eax");         
+            cg.emit.emit("xorl", "%edx", "%edx");         
+            cg.emit.emit("idivl", right);
+        	cg.emit.emit("movl", "%eax", left);
+        	
+        	        	/*
             cg.withRegistersSaved(() -> {
-                    cg.emit.emit("movl", "$0", "%rdx");
-                    cg.emit.emit("movl", left, "%rax");
+            		cg.emit.emit("movl", left, "%eax");
+                    //cg.emit.emit("movl", "$0", "%edx");
+                                        
                     cg.emit.emit("idivl", right);
-                    cg.emit.emit("movl", "%rax", left);
-                }, "%rdx", "%rax");
+                    cg.emit.emit("movl", "%eax", left);
+                }, "%edx", "%eax");
+            */
+            
             break;
+            
         case B_MOD:
+        	  	
+        	cg.emit.emit("movl", left, "%eax");         
+            cg.emit.emit("xorl", "%edx", "%edx");         
+            cg.emit.emit("idivl", right);
+        	cg.emit.emit("movl", "%edx", left);
+        	/*
             cg.withRegistersSaved(() -> {
-                    cg.emit.emit("movl", "$0", "%rdx");
-                    cg.emit.emit("movl", left, "%rax");
+                    cg.emit.emit("movl", "$0", "%edx");
+                    cg.emit.emit("movl", left, "%eax");
                     cg.emit.emit("idivl", right);
-                    cg.emit.emit("movl", "%rdx", left);
-                }, "%rdx", "%rax");
+                    cg.emit.emit("movl", "%edx", left);
+                }, "%edx", "%eax");
+                */
             break;
         case B_PLUS:
             cg.emit.emit("addl", right, left);
@@ -134,7 +152,8 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         Register value = cg.rm.getRegister();
         cg.withRegistersSaved(()->{
                 // Reserve stack space and load variable address into register
-                cg.emit.emit("subl", "$12", "%esp");
+                cg.emit.emit("subl", "$8", "%esp");
+                //cg.emit.emit("andl", "%esp", "0xfffffff0");
                 cg.emit.emit("leal", "8(%esp)", value);
                 // Preprare stack and call scanf
                 cg.emit.emit("movl", value, "4(%esp)");
@@ -142,7 +161,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
                 cg.emit.emit("call", cd.Config.SCANF);
                 // Read value out of the stack and free the allocated space
                 cg.emit.emit("movl", "8(%esp)", value);
-                cg.emit.emit("addl", "$12", "%esp");
+                cg.emit.emit("addl", "$8", "%esp");
             }, "%eax");
         return value;
     }
@@ -222,6 +241,10 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     @Override
     public Register var(Var ast, Void arg) {
     	Register place = cg.rm.getRegister();
+    	
+    	//TODO
+    	cg.emit.increaseIndent("Emitting varExpr");
+    	
     	cg.emit.emit("movl", "var"+ast.name, place);
     	return place;
     }
