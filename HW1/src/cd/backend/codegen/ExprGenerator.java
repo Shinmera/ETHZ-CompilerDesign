@@ -62,15 +62,24 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
             break;
         case B_DIV:
         case B_MOD:
-        	// We need to switch the registers out here if they happen to be
-        	// EAX or EDX, as they would then conflict with the specific input
-        	// requirements of the IDIV instruction. This means that in very
-        	// unfortunate circumstances we might temporarily require one more
-        	// register as temporary storage, which could lead to a register
-        	// exhaustion. As the project is right now, this cannot happen
-        	// however as we only use ~2 registers within any possible branch.
-        	Register lleft = cg.ensureSafeRegister(left, "%eax", "%edx");
-        	Register lright = cg.ensureSafeRegister(right, "%eax", "%edx");
+            // We need to switch the registers out here if they happen to be
+            // EAX or EDX, as they would then conflict with the specific input
+            // requirements of the IDIV instruction.
+            //
+            // This is less than awesome for a number of reasons, the cause of
+            // which all boils down to the limitations in the framework that
+            // was provided to us.
+            // - The ensuring of a free register temporarily needs more registers
+            //   which might lead to register exhaustion in exotic circumstances.
+            // - Since we cannot request specific registers from the register
+            //   manager, we have to copy EAX/EDX at the end rather than simply
+            //   requesting the register manager to give them to us and return
+            //   the appropriate one immediately.
+            // - If we could tell the register manager to swap out specific
+            //   registers, this could be done with no additional register pressure
+            //   overhead by simply taking hold of EAX and EDX directly.
+            Register lleft = cg.ensureSafeRegister(left, "%eax", "%edx");
+            Register lright = cg.ensureSafeRegister(right, "%eax", "%edx");
             cg.withRegistersSaved(() -> {
                     cg.emit.emit("movl", "$0", "%edx");
                     cg.emit.emit("movl", lleft, "%eax");
