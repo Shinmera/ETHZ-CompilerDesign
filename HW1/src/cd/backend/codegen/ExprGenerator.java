@@ -3,6 +3,7 @@ package cd.backend.codegen;
 import cd.ToDoException;
 import cd.backend.codegen.RegisterManager.Register;
 import cd.ir.Ast.BinaryOp;
+import cd.ir.Ast.BinaryOp.BOp;
 import cd.ir.Ast.BooleanConst;
 import cd.ir.Ast.BuiltInRead;
 import cd.ir.Ast.Cast;
@@ -60,20 +61,24 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
             cg.emit.emit("imull", right, left);
             break;
         case B_DIV:
-            cg.withRegistersSaved(() -> {
-              cg.emit.emit("movl", "$0", "%edx");
-              cg.emit.emit("movl", left, "%eax");
-              cg.emit.emit("idivl", right);
-              cg.emit.emit("movl", "%eax", left);
-              }, new Register[]{right, left}, new String[]{"%edx", "%eax"});
-            break;
         case B_MOD:
+        	// We need to switch the registers out here if they happen to be
+        	// EAX or EDX, as they would then conflict with the specific input
+        	// requirements of the IDIV instruction. This means that in very
+        	// unfortunate circumstances we might temporarily require one more
+        	// register as temporary storage, which could lead to a register
+        	// exhaustion. As the project is right now, this cannot happen
+        	// however as we only use ~2 registers within any possible branch.
+        	Register lleft = cg.ensureSafeRegister(left, "%eax", "%edx");
+        	Register lright = cg.ensureSafeRegister(right, "%eax", "%edx");
             cg.withRegistersSaved(() -> {
-              cg.emit.emit("movl", "$0", "%edx");
-              cg.emit.emit("movl", left, "%eax");
-              cg.emit.emit("idivl", right);
-              cg.emit.emit("movl", "%edx", left);
-              }, new Register[]{right, left}, new String[]{"%edx", "%eax"});
+                    cg.emit.emit("movl", "$0", "%edx");
+                    cg.emit.emit("movl", lleft, "%eax");
+                    cg.emit.emit("idivl", lright);
+                    cg.emit.emit("movl", (ast.operator == BOp.B_DIV)?"%eax":"%edx", lleft);
+                }, new Register[]{lright, lleft}, new String[]{"%edx", "%eax"});
+            left = lleft;
+            right = lright;
             break;
         case B_PLUS:
             cg.emit.emit("addl", right, left);
@@ -135,7 +140,6 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         cg.withRegistersSaved(()->{
                 // Reserve stack space and load variable address into register
                 cg.emit.emit("subl", "$8", "%esp");
-                //cg.emit.emit("andl", "%esp", "0xfffffff0");
                 cg.emit.emit("leal", "8(%esp)", value);
                 // Preprare stack and call scanf
                 cg.emit.emit("movl", value, "4(%esp)");

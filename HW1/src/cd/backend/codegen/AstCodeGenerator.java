@@ -65,6 +65,18 @@ public class AstCodeGenerator {
     	}
     	return false;
     }
+    
+    public Register ensureSafeRegister(Register reg, String... avoid){
+    	for(String name : avoid){
+    		if(reg.repr.equals(name)){
+    			Register next = ensureSafeRegister(rm.getRegister(), avoid);
+    			emit.emit("xchgl", reg, next);
+    			rm.releaseRegister(reg);
+    			return next;
+    		}
+    	}
+    	return reg;
+    }
 
     public void withRegistersSaved(Runnable func, Register[] preserve, String[] save){
         for(int i=0; i<save.length; i++){
