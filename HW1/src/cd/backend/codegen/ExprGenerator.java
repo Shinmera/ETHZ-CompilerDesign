@@ -46,51 +46,51 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     
     @Override
     public Register binaryOp(BinaryOp ast, Void arg) {
-    	Register right, left;
-    	if(ast.left() instanceof BinaryOp){
+        Register right, left;
+        if(ast.left() instanceof BinaryOp){
             left = this.visit(ast.left(), arg);
             right = this.visit(ast.right(), arg);
-    	}else{
+        }else{
             right = this.visit(ast.right(), arg);
             left = this.visit(ast.left(), arg);
-    	}
+        }
 
         switch(ast.operator){
         case B_TIMES:
             cg.emit.emit("imull", right, left);
             break;
         case B_DIV:
-        	
+                
             cg.emit.emit("movl", left, "%eax");         
             cg.emit.emit("xorl", "%edx", "%edx");         
             cg.emit.emit("idivl", right);
-        	cg.emit.emit("movl", "%eax", left);
-        	
-        	        	/*
-            cg.withRegistersSaved(() -> {
-            		cg.emit.emit("movl", "$0", "%edx");
-            		cg.emit.emit("movl", left, "%eax");
-                    cg.emit.emit("idivl", right);
-                    cg.emit.emit("movl", "%eax", left);
-                }, "%edx", "%eax");
+            cg.emit.emit("movl", "%eax", left);
+                
+            /*
+              cg.withRegistersSaved(() -> {
+              cg.emit.emit("movl", "$0", "%edx");
+              cg.emit.emit("movl", left, "%eax");
+              cg.emit.emit("idivl", right);
+              cg.emit.emit("movl", "%eax", left);
+              }, "%edx", "%eax");
             */
             
             break;
             
         case B_MOD:
-        	  	
-        	cg.emit.emit("movl", left, "%eax");         
+                        
+            cg.emit.emit("movl", left, "%eax");         
             cg.emit.emit("xorl", "%edx", "%edx");         
             cg.emit.emit("idivl", right);
-        	cg.emit.emit("movl", "%edx", left);
-        	/*
-            cg.withRegistersSaved(() -> {
-                    cg.emit.emit("movl", "$0", "%edx");
-                    cg.emit.emit("movl", left, "%eax");
-                    cg.emit.emit("idivl", right);
-                    cg.emit.emit("movl", "%edx", left);
-                }, "%edx", "%eax");
-                */
+            cg.emit.emit("movl", "%edx", left);
+            /*
+              cg.withRegistersSaved(() -> {
+              cg.emit.emit("movl", "$0", "%edx");
+              cg.emit.emit("movl", left, "%eax");
+              cg.emit.emit("idivl", right);
+              cg.emit.emit("movl", "%edx", left);
+              }, "%edx", "%eax");
+            */
             break;
         case B_PLUS:
             cg.emit.emit("addl", right, left);
@@ -161,7 +161,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
                 // Read value out of the stack and free the allocated space
                 cg.emit.emit("movl", "8(%esp)", value);
                 cg.emit.emit("addl", "$8", "%esp");
-            }, "%eax");
+            }, new Register[]{value}, new String[]{"%eax"});
         return value;
     }
 
@@ -223,26 +223,26 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 
     @Override
     public Register unaryOp(UnaryOp ast, Void arg) {
-    	Register value = this.visit(ast.arg(), arg);
-    	switch(ast.operator){
-    	case U_BOOL_NOT:
+        Register value = this.visit(ast.arg(), arg);
+        switch(ast.operator){
+        case U_BOOL_NOT:
             cg.emit.emit("notl", value);
             break;
-    	case U_MINUS:
+        case U_MINUS:
             cg.emit.emit("negl", value);
             break;
-    	case U_PLUS:
+        case U_PLUS:
             break;
-    	}
-    	return value;
+        }
+        return value;
     }
     
     @Override
     public Register var(Var ast, Void arg) {
-    	Register place = cg.rm.getRegister();
-    	
-    	cg.emit.emit("movl", "var"+ast.name, place);
-    	return place;
+        Register place = cg.rm.getRegister();
+        
+        cg.emit.emit("movl", "var"+ast.name, place);
+        return place;
     }
 
 }

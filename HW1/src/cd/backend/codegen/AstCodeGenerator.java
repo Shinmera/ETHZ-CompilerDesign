@@ -1,6 +1,7 @@
 package cd.backend.codegen;
 
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.List;
 import cd.backend.codegen.RegisterManager.Register;
 
@@ -56,16 +57,28 @@ public class AstCodeGenerator {
 
     protected void initMethodData() {
     }
+    
+    private boolean inRegisterArray(String name, Register[] regs){
+    	for(Register reg : regs){
+    		if(reg.repr.equals(name))
+    			return true;
+    	}
+    	return false;
+    }
 
-    public void withRegistersSaved(Runnable func, String...regs){
-        for(int i=0; i<regs.length; i++){
-            emit.emit("subl", "$4", "%esp");
-            emit.emit("movl", regs[i], "0(%esp)");
+    public void withRegistersSaved(Runnable func, Register[] preserve, String[] save){
+        for(int i=0; i<save.length; i++){
+        	if(!inRegisterArray(save[i], preserve)){
+        		emit.emit("subl", "$4", "%esp");	
+        		emit.emit("movl", save[i], "0(%esp)");
+        	}
         }
         func.run();
-        for(int i=regs.length-1; i>=0; i--){
-            emit.emit("movl", "0(%esp)", regs[i]);
-            emit.emit("addl", "$4", "%esp");
+        for(int i=save.length-1; i>=0; i--){
+        	if(!inRegisterArray(save[i], preserve)){
+        		emit.emit("movl", "0(%esp)", save[i]);
+        		emit.emit("addl", "$4", "%esp");
+        	}
         }
     }
 }

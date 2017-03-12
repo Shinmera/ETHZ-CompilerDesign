@@ -92,10 +92,6 @@ class StmtGenerator extends AstVisitor<Register, Void> {
     public Register assign(Assign ast, Void arg) {
         Register place = cg.sg.visit(ast.left(), arg);
         Register value = cg.eg.visit(ast.right(), arg);
-        
-        //TODO
-        cg.emit.increaseIndent("Emitting assignment");
-        
         cg.emit.emit("movl", value, "("+place.repr+")");
         cg.rm.releaseRegister(place);
         cg.rm.releaseRegister(value);
@@ -112,17 +108,13 @@ class StmtGenerator extends AstVisitor<Register, Void> {
         // provided framework.
     	cg.withRegistersSaved(()->{
                 Register value = cg.eg.visit(ast.arg(), arg);
-                
                 cg.emit.emit("subl", "$8", "%esp");
-                
-                //cg.emit.emit("andl", "0xfffffff0", "%esp");
-                
                 cg.emit.emit("movl", value, "4(%esp)");
                 cg.emit.emit("movl", "$printfinteger", "0(%esp)");
                 cg.emit.emit("call", cd.Config.PRINTF);
                 cg.emit.emit("addl", "$8", "%esp");
                 cg.rm.releaseRegister(value);
-            }, "%eax");
+            }, new Register[]{}, new String[]{"%eax"});
         return null;
     }
 
@@ -130,11 +122,10 @@ class StmtGenerator extends AstVisitor<Register, Void> {
     public Register builtInWriteln(BuiltInWriteln ast, Void arg) {
         cg.withRegistersSaved(()->{
                 cg.emit.emit("subl", "$16", "%esp");
-                
                 cg.emit.emit("movl", "$printfnewline", "0(%esp)");
                 cg.emit.emit("call", cd.Config.PRINTF);
                 cg.emit.emit("addl", "$16", "%esp");
-            }, "%eax");
+            }, new Register[]{}, new String[]{"%eax"});
         return null;
     } 
     
