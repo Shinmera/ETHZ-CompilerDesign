@@ -60,37 +60,20 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
             cg.emit.emit("imull", right, left);
             break;
         case B_DIV:
-                
-            cg.emit.emit("movl", left, "%eax");         
-            cg.emit.emit("xorl", "%edx", "%edx");         
-            cg.emit.emit("idivl", right);
-            cg.emit.emit("movl", "%eax", left);
-                
-            /*
-              cg.withRegistersSaved(() -> {
+            cg.withRegistersSaved(() -> {
               cg.emit.emit("movl", "$0", "%edx");
               cg.emit.emit("movl", left, "%eax");
               cg.emit.emit("idivl", right);
               cg.emit.emit("movl", "%eax", left);
-              }, "%edx", "%eax");
-            */
-            
+              }, new Register[]{right, left}, new String[]{"%edx", "%eax"});
             break;
-            
         case B_MOD:
-                        
-            cg.emit.emit("movl", left, "%eax");         
-            cg.emit.emit("xorl", "%edx", "%edx");         
-            cg.emit.emit("idivl", right);
-            cg.emit.emit("movl", "%edx", left);
-            /*
-              cg.withRegistersSaved(() -> {
+            cg.withRegistersSaved(() -> {
               cg.emit.emit("movl", "$0", "%edx");
               cg.emit.emit("movl", left, "%eax");
               cg.emit.emit("idivl", right);
               cg.emit.emit("movl", "%edx", left);
-              }, "%edx", "%eax");
-            */
+              }, new Register[]{right, left}, new String[]{"%edx", "%eax"});
             break;
         case B_PLUS:
             cg.emit.emit("addl", right, left);
