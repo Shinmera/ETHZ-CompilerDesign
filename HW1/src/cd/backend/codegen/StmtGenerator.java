@@ -90,8 +90,9 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
     @Override
     public Register assign(Assign ast, Void arg) {
-        Register place = cg.sg.visit(ast.left(), arg);
+    	// Compute value first to reduce register pressure.
         Register value = cg.eg.visit(ast.right(), arg);
+        Register place = cg.sg.visit(ast.left(), arg);
         cg.emit.emit("movl", value, "("+place.repr+")");
         cg.rm.releaseRegister(place);
         cg.rm.releaseRegister(value);
