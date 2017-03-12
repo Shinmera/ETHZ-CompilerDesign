@@ -68,9 +68,8 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         	
         	        	/*
             cg.withRegistersSaved(() -> {
+            		cg.emit.emit("movl", "$0", "%edx");
             		cg.emit.emit("movl", left, "%eax");
-                    //cg.emit.emit("movl", "$0", "%edx");
-                                        
                     cg.emit.emit("idivl", right);
                     cg.emit.emit("movl", "%eax", left);
                 }, "%edx", "%eax");
