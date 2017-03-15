@@ -1,0 +1,14 @@
+// Test multiple read operations.
+class Main {
+   void main() {
+      int i0;
+		
+      i0 = read();
+      write(i0);
+      i0 = read();
+      write(i0);
+      i0 = read();
+      write(i0);
+	  
+   }
+}

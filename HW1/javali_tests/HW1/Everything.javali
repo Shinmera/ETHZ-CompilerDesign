@@ -1,0 +1,25 @@
+// Test everything
+class Main {
+   void main() {
+      int r1, r2, r3, r4;
+      int i0, i1, i2, i3;
+	  int i4;
+	
+      i0 = 5;
+      i1 = read();
+      i2 = read();
+      i3 = -(7);
+		
+      r1 = ( i2 / 2 );
+      write( -(r1 % 2) ); writeln();
+
+	  i4 = read();
+
+	  r2 = r1 / i3;
+      write( (r2 * 12) ); write( i4 ); writeln();
+	
+	  r3 = 1 - 3 % (37 / ( 5 * i3 + 2 ) );
+	  r4 = r3;
+      write( (r4 * 10) % i4 - 2 + 2 * 5 / -(i1) ); writeln();
+   }
+}

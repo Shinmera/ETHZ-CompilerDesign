@@ -1,0 +1,28 @@
+// Test division operation.
+class Main {
+   void main() {
+      int a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t;
+	  a = read();
+	  b = read();
+	  c = read();
+	  d = read();
+	  e = read();
+	  f = read();
+	  g = read();
+	  h = read();
+	  i = read();
+	  j = read();
+	  k = read();
+	  l = read();
+	  m = read();
+	  n = read();
+	  o = read();
+	  p = read();
+	  q = read();
+	  r = read();
+	  s = read();
+	  t = read();
+	  
+	  write( ( ( ( ( ( ( a + b - c ) * ( d % e ) / 2 ) + f - g + h - i + j ) * k ) * l ) % 2 ) - (-m) + (-n) - (+o) + (+p) + (q * (-r) * -(-s) / t ) );
+   }
+}

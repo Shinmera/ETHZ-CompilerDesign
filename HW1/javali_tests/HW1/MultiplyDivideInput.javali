@@ -1,0 +1,18 @@
+// Test multiplication and division of inputs.
+class Main {
+   void main() {
+      int r1;
+      int i0,  i1, i2;
+		
+      i0 = 5;
+      i1 = read();
+      i2 = read();
+		
+      r1 = i0*i2;
+      write(r1); writeln();
+
+      write(r1/i1); writeln();
+	
+      write(-(i1*i2)); writeln();
+   }
+}

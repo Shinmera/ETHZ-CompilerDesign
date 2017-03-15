@@ -1,0 +1,20 @@
+// Test multiple read operations.
+class Main {
+   void main() {
+      int a,b,c,d,e,f, g;
+		
+      a = 35;
+      b = 387;
+      c = 12;
+      e = 99;
+      f = 77;
+      g = 2;
+      
+      a = - (- (-b)) + c - (-d + ( +e));
+      write( a );
+      
+      b = + (- (+g)) - (- (- (-f - (- e) ) ) );
+      write( b);
+	  
+   }
+}
