@@ -1,0 +1,22 @@
+// Test operations with zero.
+class Main {
+   void main() {
+      int i0;
+		
+      i0 = 0;
+		
+	  // multiply
+      write( i0 * 12 ); writeln();
+      //divide
+	  write ( i0 / 1 ); writeln();
+	  // Subtract
+	  write ( i0 - 0 ); writeln();
+	  // Add
+	  write ( i0 + i0 ); writeln();
+	  // Modulo
+	  write ( 0 % 1 ); writeln();
+	  // Negation
+	  write ( -i0 ); writeln();
+	  
+   }
+}
