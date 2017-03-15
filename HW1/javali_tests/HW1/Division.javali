@@ -1,8 +1,19 @@
+// Test division operation.
 class Main {
-	void main() {
-		write(8/4); writeln();
-		write((2+3+1)/(1+2)); writeln();
-		write(5/2); writeln();
-		write(2/4); writeln();
-	}
+   void main() {
+      int r1;
+      int i0,  i1;
+		
+      i0 = 5;
+      i1 = 2;
+		
+      r1 = 2 / 2;
+      write(r1); writeln();
+
+      r1 = i0 / r1;
+      write(r1); writeln();
+	
+      r1 = r1 / i1;
+      write(r1); writeln();
+   }
 }

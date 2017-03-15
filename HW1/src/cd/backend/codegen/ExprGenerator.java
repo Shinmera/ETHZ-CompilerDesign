@@ -78,7 +78,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
             // - If we could tell the register manager to swap out specific
             //   registers, this could be done with no additional register pressure
             //   overhead by simply taking hold of EAX and EDX directly.
-            Register lleft = cg.ensureSafeRegister(left, "%eax", "%edx");
+        	Register lleft = cg.ensureSafeRegister(left, "%eax", "%edx");
             Register lright = cg.ensureSafeRegister(right, "%eax", "%edx");
             cg.withRegistersSaved(() -> {
                     cg.emit.emit("movl", "$0", "%edx");
