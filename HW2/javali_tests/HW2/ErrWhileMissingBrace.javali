@@ -1,0 +1,10 @@
+class Main {
+   void main() {
+      int i;
+    
+      // Note: In Javali, while() loops must have braces ({}) after them,
+      // so this is an expected syntax error.
+      while(true)
+         i = 1;
+  }
+}

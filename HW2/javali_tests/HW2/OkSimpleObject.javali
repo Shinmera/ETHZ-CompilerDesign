@@ -1,0 +1,22 @@
+class Main {
+
+   int field;
+  
+   void method() { 
+      write(this.field);
+      writeln();
+   }
+  
+   void method(int withArg) {
+      write(withArg);
+      writeln();
+   }
+  
+   void main() {
+      this.field = 3;
+      method(field);
+      method(3);
+      method(this.field);
+      method();
+   }
+}
