@@ -9,7 +9,7 @@ class Main {
       e = 99;
       f = 77;
       g = 2;
-      
+      2
       a = - (- (-b)) + c - (-d + ( +e));
       write( a );
       

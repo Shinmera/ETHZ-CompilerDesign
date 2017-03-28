@@ -59,21 +59,21 @@ expression:
 ;
 
 booleanExpression :
-	'!' booleanExpression
-	| booleanExpression '&&' booleanExpression
-	| booleanExpression '||' booleanExpression
-	| Boolean
+	'!' booleanExpression # NOT
+	| booleanExpression '&&' booleanExpression # AND
+	| booleanExpression '||' booleanExpression # OR
+	| Boolean # BOOL
 ;
 
 integerExpression : 
- 	('+' | '-' ) integerExpression
-	| integerExpression '*' integerExpression 
-	| integerExpression '/' integerExpression
-	| integerExpression '+' integerExpression
-	| integerExpression '-' integerExpression
-	| Read
-	| Identifier
-	| Integer
+ 	('+' | '-' ) integerExpression  # UNARY
+	| integerExpression '*' integerExpression # MULT
+	| integerExpression '/' integerExpression # DIV
+	| integerExpression '+' integerExpression # ADD
+	| integerExpression '-' integerExpression # SUB
+	| Read	# READ
+	| Identifier # IDENT
+	| Integer # INT
 ;
 
 newExpression : 
