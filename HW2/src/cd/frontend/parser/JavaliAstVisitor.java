@@ -51,7 +51,11 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 
         ArrayList<Ast> declarations = new ArrayList<Ast>();
         for (DeclarationContext c : ctx.declaration()) {
-            declarations.add(c.accept(this));
+            Ast ast = c.accept(this);
+            if(ast instanceof Ast.Seq)
+                declarations.addAll(((Ast.Seq)ast).rwChildren());
+            else
+                declarations.add(ast);
         }
 
         Ast.ClassDecl decl = new Ast.ClassDecl(name.getText(), 
@@ -60,13 +64,6 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         classDecls.add(decl);
 
         return decl;
-    }
-
-    @Override
-    public Ast visitVariableDeclaration(VariableDeclarationContext ctx) {
-        String type = ctx.type().getText();
-        // FIXME for multiple
-        return new Ast.VarDecl(type, ctx.Identifier(0).getText());
     }
 
     @Override
@@ -84,7 +81,7 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 
         ArrayList<Ast> declarations = new ArrayList<Ast>();
         for (VariableDeclarationContext c : ctx.variableDeclaration()) {
-            declarations.add(c.accept(this));
+            declarations.addAll(((Ast.Seq)c.accept(this)).rwChildren());
         }
 
         ArrayList<Ast> statements = new ArrayList<Ast>();
@@ -97,6 +94,16 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
                                   formalParams,
                                   new Ast.Seq(declarations),
                                   new Ast.Seq(statements));
+    }
+
+    @Override
+    public Ast visitVariableDeclaration(VariableDeclarationContext ctx) {
+        String type = ctx.type().getText();
+        ArrayList<Ast> declarations = new ArrayList<Ast>();
+        for(TerminalNode identifier : ctx.Identifier()){
+            declarations.add(new Ast.VarDecl(type, identifier.getText()));
+        }
+        return new Ast.Seq(declarations);
     }
 
     @Override
