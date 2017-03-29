@@ -1,0 +1,21 @@
+Grade: 15/25
+
+
+
+Comments:
+
+1) The builtInRead fails for some tests. I don't know what is wrong.
+
+	[-1pt]
+
+
+2) There is no implementation of a method that calculates the minimum number of required registers.
+Instead you check if the left is instance of BinaryOp to decide whether to visit the left or the right first.
+
+	[-8pts]
+
+
+3) Division is incorrect. You didn't use cltd to extend the sign of %eax to %edx.
+Your solution requires more registers since you don't store %eax and %edx in the stack, but this is fine if you calculate correctly the minimum number of required registers (which is missing here).
+
+	[-1pt]
