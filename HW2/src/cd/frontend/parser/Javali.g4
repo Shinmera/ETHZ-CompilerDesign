@@ -68,7 +68,7 @@ booleanExpression
 	: '!' booleanExpression
 	| booleanExpression '&&' booleanExpression
 	| booleanExpression '||' booleanExpression
-	| BooleanLiteral
+	| booleanLiteral
 	;
 
 integerExpression
@@ -78,8 +78,8 @@ integerExpression
 	| integerExpression '+' integerExpression
 	| integerExpression '-' integerExpression
 	| read
+	| integerLiteral
 	| Identifier
-	| IntegerLiteral
 	;
 
 newExpression 
@@ -98,9 +98,19 @@ read
     ;
 
 literal
-	: IntegerLiteral
-	| BooleanLiteral
+	: integerLiteral
+	| booleanLiteral
 	| 'null'
+	;
+	
+integerLiteral
+	: HexLiteral
+	| DecimalLiteral
+	;
+
+booleanLiteral
+	: FALSE
+	| TRUE
 	;
 	
 accessModifier
@@ -170,10 +180,6 @@ COMMA: ',';
 SEMICOLON: ';';
 ASSIGN: '=';
 
-Identifier 
-	: Letter (Letter|Digit)*
-	;
-
 fragment
 Letter
 	: 'A'..'Z'
@@ -192,23 +198,17 @@ HexDigit
 	| 'A'..'F'
 	;
 	
-Decimal
+DecimalLiteral
 	: '0'
 	| '1'..'9' (Digit)*
 	;
 
-Hex
+HexLiteral
 	: '0' [xX] (HexDigit)+
-	;	
-
-IntegerLiteral
-	: Hex
-	| Decimal
 	;
-	
-BooleanLiteral
-	: TRUE
-	| FALSE
+
+Identifier 
+	: Letter (Letter|Digit)*
 	;
 
 // comments and white space does not produce tokens:
