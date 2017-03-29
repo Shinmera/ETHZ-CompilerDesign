@@ -16,27 +16,30 @@ grammar Javali; // parser grammar, parses streams of tokens
  	: classDecl + EOF
  	;
 
-classDecl:
-	 'class' Identifier ('extends' Identifier)? '{' (declaration)* '}';
+classDecl
+	: 'class' Identifier ('extends' Identifier)? '{' (declaration)* '}'
+	;
 
-methodDeclaration: ReturnType Identifier '(' formalParameterList ')' '{' (variableDeclaration)* (statement)* '}';
+methodDeclaration
+	: ReturnType Identifier '(' formalParameterList ')' '{' (variableDeclaration)* (statement)* '}'
+	;
 
-variableDeclaration :
-	Type Identifier (',' Identifier)* ';'
-;	
+variableDeclaration 
+	: Type Identifier (',' Identifier)* ';'
+	;	
 
-declaration : 
-	variableDeclaration
+declaration
+	: variableDeclaration
 	| methodDeclaration
 	;
 
-formalParameterList :
-	Type Identifier (',' Type Identifier)*
-;
+formalParameterList
+	: Type Identifier (',' Type Identifier)*
+	;
 
 
-statement:
-	'if' '(' booleanExpression ')' 'then' '{' statement '}' 'else' '{' statement '}'
+statement
+	: 'if' '(' booleanExpression ')' 'then' '{' statement '}' 'else' '{' statement '}'
 	| 'if' '(' booleanExpression ')' 'then' '{' statement '}'
 	| 'while' '(' booleanExpression ')' '{' statement '}'
 	| assignment 
@@ -44,29 +47,29 @@ statement:
 	| 'return' (expression)? ';'
 	;
 	
-assignment:
-	Identifier '=' expression ';'
+assignment
+	: Identifier '=' expression ';'
 	;
 	 
 
-expression:
-	expression '==' expression
+expression
+	: expression '==' expression
 	| expression '!=' expression
 	| integerExpression ('<' | '<=' | '>' | '>=') integerExpression
 	| booleanExpression 
 	| integerExpression
 	| newExpression
-;
+	;
 
-booleanExpression :
-	'!' booleanExpression # NOT
+booleanExpression
+	: '!' booleanExpression # NOT
 	| booleanExpression '&&' booleanExpression # AND
 	| booleanExpression '||' booleanExpression # OR
 	| Boolean # BOOL
-;
+	;
 
-integerExpression : 
- 	('+' | '-' ) integerExpression  # UNARY
+integerExpression
+	: ('+' | '-' ) integerExpression  # UNARY
 	| integerExpression '*' integerExpression # MULT
 	| integerExpression '/' integerExpression # DIV
 	| integerExpression '+' integerExpression # ADD
@@ -74,85 +77,112 @@ integerExpression :
 	| Read	# READ
 	| Identifier # IDENT
 	| Integer # INT
-;
+	;
 
-newExpression : 
-	'new' ( Identifier '(' ')' 
+newExpression 
+	: 'new' ( Identifier '(' ')' 
 	| Identifier '[' expression ']'
 	| PrimitiveType '[' expression ']' )
 	;
 
-write : 
-	'write' '(' expression ')' ';'
+write
+	: 'write' '(' expression ')' ';'
 	| 'writeln' '('')' ';'
 	;
 
 
 // LEXER RULES
-// TODO: provide appropriate lexer rules for numbers and boolean literals
 
-
-
-// Java(li) identifiers:
 Identifier 
-	:	Letter (Letter|Digit)*
+	: Letter (Letter|Digit)*
 	;
 	
-Read : 'read()';
+Read
+	: 'read()'
+	;
 
 fragment
 Letter
-	:	'A'..'Z'
-	|	'a'..'z'
+	: 'A'..'Z'
+	| 'a'..'z'
 	;
-	
-//fragment
+
 Digit
-	:	'0'..'9'
+	: '0'..'9'
+	;
+
+HexDigit
+	: Digit 
+	| 'a'..'f'
+	| 'A'..'F'
 	;
 	
-HexDigit :
-	 Digit 
-	 | 'a'..'f'
-	 | 'A'..'F';
-	 
-Decimal : '0' | '1'..'9' (Digit)*;
+Decimal
+	: '0'
+	| '1'..'9' (Digit)*
+	;
 
-Hex : ('0x' | '0X') (HexDigit)+ ;	
+Hex
+	: ('0x' | '0X') (HexDigit)+
+	;	
 
-Integer : Hex | Decimal ;
+Integer
+	: Hex
+	| Decimal
+	;
 	
-Boolean:
-	'true' | 'false';
+Boolean
+	: 'true'
+	| 'false'
+	;
 	
-Literal:
-	Integer
+Literal
+	: Integer
 	| Boolean
-	| 'null';
+	| 'null'
+	;
 	
-AccessModifier : 'public' | 'private';	
+AccessModifier
+	: 'public'
+	| 'private'
+	;	
 
 // Types
 
-PrimitiveType : 'boolean' | 'int' ;
+Type
+	: ReferenceType
+	| PrimitiveType
+	;
 
-Type : PrimitiveType | ReferenceType ;
+PrimitiveType
+	: 'boolean'
+	| 'int'
+	;
 
-ReferenceType : Identifier | ArrayType ;
+ReferenceType
+	: ArrayType
+	| Identifier
+	;
 
-ArrayType : Identifier '[' ']' | PrimitiveType '[' ']' ;
+ArrayType
+	: PrimitiveType '[' ']' 
+	| Identifier '[' ']'
+	;
 
-ReturnType : 'void' | Type;	
+ReturnType
+	: 'void'
+	| Type
+	;	
 
 // comments and white space does not produce tokens:
 COMMENT
-	:	'/*' .*? '*/' -> skip
+	: '/*' .*? '*/' -> skip
 	;
 
 LINE_COMMENT
-	:	'//' ~('\n'|'\r')* -> skip
+	: '//' ~('\n'|'\r')* -> skip
 	;
 
 WS
-	:	(' '|'\r'|'\t'|'\n') -> skip
+	: (' '|'\r'|'\t'|'\n') -> skip
 	;
