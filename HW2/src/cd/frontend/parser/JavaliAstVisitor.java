@@ -3,222 +3,276 @@ package cd.frontend.parser;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import cd.frontend.parser.JavaliParser.AdditiveExpressionContext;
+import cd.frontend.parser.JavaliParser.AssignmentContext;
+import cd.frontend.parser.JavaliParser.BooleanLiteralContext;
+import cd.frontend.parser.JavaliParser.CastExpressionContext;
 import cd.frontend.parser.JavaliParser.ClassDeclContext;
+import cd.frontend.parser.JavaliParser.ComparativeExpressionContext;
 import cd.frontend.parser.JavaliParser.DeclarationContext;
+import cd.frontend.parser.JavaliParser.EqualityExpressionContext;
+import cd.frontend.parser.JavaliParser.ExpressionContext;
+import cd.frontend.parser.JavaliParser.FormalParameterListContext;
+import cd.frontend.parser.JavaliParser.IfStatementContext;
+import cd.frontend.parser.JavaliParser.IntegerLiteralContext;
+import cd.frontend.parser.JavaliParser.LogandExpressionContext;
+import cd.frontend.parser.JavaliParser.LogiorExpressionContext;
 import cd.frontend.parser.JavaliParser.MethodDeclarationContext;
+import cd.frontend.parser.JavaliParser.ModifiedReferenceContext;
+import cd.frontend.parser.JavaliParser.MultiplicativeExpressionContext;
+import cd.frontend.parser.JavaliParser.ReadContext;
+import cd.frontend.parser.JavaliParser.ReferenceModifierContext;
+import cd.frontend.parser.JavaliParser.ReturnStatementContext;
 import cd.frontend.parser.JavaliParser.StatementContext;
+import cd.frontend.parser.JavaliParser.UnaryExpressionContext;
 import cd.frontend.parser.JavaliParser.VariableDeclarationContext;
+import cd.frontend.parser.JavaliParser.WhileStatementContext;
+import cd.frontend.parser.JavaliParser.WriteContext;
+import cd.frontend.parser.JavaliParser.WritelnContext;
 import cd.ir.Ast;
 import cd.ir.Ast.ClassDecl;
 import cd.util.Pair;
 
-public final class JavaliAstVisitor extends JavaliBaseVisitor<Void> {
-
+public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     public List<ClassDecl> classDecls = new ArrayList<>();
-    public List<Ast> localDecls;
-    public List<Pair<String>> formalParams;
-    public List<Ast> statements;
 
     @Override
-    public Void visitClassDecl(ClassDeclContext ctx) {
-        localDecls = new ArrayList<>();
-        
-        // Superclass.
-        String sClass = "Object";
-
-        /*
-         * 1. Get Tokens
-         */
-        // Class name
+    public Ast visitClassDecl(ClassDeclContext ctx) {
         TerminalNode name = ctx.Identifier(0);
 
-        // Superclass
-        TerminalNode superclass = ctx.Identifier(1);
-        if (superclass != null) {
-            sClass = superclass.getText();
+        String superclass = "Object";
+        if (ctx.Identifier(1) != null) {
+            superclass = ctx.Identifier(1).getText();
         }
 
-        // Get the list of all members.
+        ArrayList<Ast> declarations = new ArrayList<Ast>();
         for (DeclarationContext c : ctx.declaration()) {
-            c.accept(this);
+            declarations.add(c.accept(this));
         }
 
-        /*
-         * 2. Create AST
-         */
-        /*
-         * // Test VarDecl decl2 = new VarDecl("int", "i"); VarDecl decl3 = new
-         * VarDecl("int", "j"); List <Ast> decls2 = new ArrayList<Ast>();
-         * decls2.add(decl2); decls2.add(decl3);
-         */
-
-        // TODO decls List<Ast> not working. See ClassDecl definition of the
-        // field 'members'.
-        Ast.ClassDecl decl = new Ast.ClassDecl(name.getText(), sClass, localDecls);
+        Ast.ClassDecl decl = new Ast.ClassDecl(name.getText(), 
+                                               superclass,
+                                               declarations);
         classDecls.add(decl);
 
-        return null;
+        return decl;
     }
 
     @Override
-    public Void visitDeclaration(DeclarationContext ctx) {
-        ctx.variableDeclaration().accept(this);
-        ctx.methodDeclaration().accept(this);
-        return null;
+    public Ast visitVariableDeclaration(VariableDeclarationContext ctx) {
+        String type = ctx.type().getText();
+        // FIXME for multiple
+        return new Ast.VarDecl(type, ctx.Identifier(0).getText());
     }
 
     @Override
-    public Void visitVariableDeclaration(VariableDeclarationContext ctx) {
-        // TEST for test case 6.
-        /*
-         * Ast.VarDecl varDecl = new Ast.VarDecl("int", "i");
-         * varDecls.add(varDecl);
-         */
+    public Ast visitMethodDeclaration(MethodDeclarationContext ctx) {
+        String returnType = ctx.returnType().getText();
 
-        // Type
-        TerminalNode type = ctx.Type();
+        String name = ctx.Identifier().getText();
 
-        // Identifiers
-        List<TerminalNode> identifiers = ctx.Identifier();
-                
-        // Add to list.
-        for (TerminalNode t : identifiers) {
-            localDecls.add(new Ast.VarDecl(type.getText(), t.getText()));
+        FormalParameterListContext params = ctx.formalParameterList(); 
+        ArrayList<Pair<String>> formalParams = new ArrayList<Pair<String>>();
+        for(int i=0; i<params.Identifier().size(); i++){
+            formalParams.add(new Pair<String>(params.Identifier(i).getText(),
+                                              params.type(i).getText()));
         }
 
-        return null;
-    }
-
-    @Override
-    public Void visitMethodDeclaration(MethodDeclarationContext ctx) {
-        List<Ast> outerDecls = localDecls;
-        localDecls = new ArrayList<Ast>();
-        statements = new ArrayList<Ast>();
-        formalParams = new ArrayList<Pair<String>>();
-        
-        // return type
-        TerminalNode returnType = ctx.ReturnType();
-
-        // identifier
-        TerminalNode name = ctx.Identifier();
-
-        // Parameterlist
-        ctx.formalParameterList().accept(this);
-
-        // Variable declarations.
+        ArrayList<Ast> declarations = new ArrayList<Ast>();
         for (VariableDeclarationContext c : ctx.variableDeclaration()) {
-            c.accept(this);
+            declarations.add(c.accept(this));
         }
 
-        // Statements.
+        ArrayList<Ast> statements = new ArrayList<Ast>();
         for (StatementContext c : ctx.statement()) {
-            c.accept(this);
+            statements.add(c.accept(this));
         }
         
-        outerDecls.add(new Ast.MethodDecl(returnType.getText(),
-                                          name.getText(),
-                                          formalParams,
-                                          new Ast.Seq(localDecls),
-                                          new Ast.Seq(statements)));
-        localDecls = outerDecls;
-        return null;
+        return new Ast.MethodDecl(returnType,
+                                  name,
+                                  formalParams,
+                                  new Ast.Seq(declarations),
+                                  new Ast.Seq(statements));
     }
 
     @Override
-    public Void visitADD(@NotNull JavaliParser.ADDContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitReturnStatement(ReturnStatementContext ctx) {
+        return new Ast.ReturnStmt((ctx.expression() != null)
+                                  ? (Ast.Expr)ctx.expression().accept(this)
+                                  : null);
     }
 
     @Override
-    public Void visitSUB(@NotNull JavaliParser.SUBContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitWrite(WriteContext ctx) {
+        return new Ast.BuiltInWrite((Ast.Expr)ctx.expression().accept(this));
+    }
+    
+    public Ast visitWriteln(WritelnContext ctx) {
+        return new Ast.BuiltInWriteln();
     }
 
     @Override
-    public Void visitExpression(@NotNull JavaliParser.ExpressionContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitBooleanLiteral(BooleanLiteralContext ctx) {
+        return new Ast.BooleanConst((ctx.TRUE() != null)? true : false);
     }
 
     @Override
-    public Void visitOR(@NotNull JavaliParser.ORContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitRead(ReadContext ctx) {
+        return new Ast.BuiltInRead();
     }
 
     @Override
-    public Void visitAssignment(@NotNull JavaliParser.AssignmentContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitAssignment(AssignmentContext ctx) {
+        return super.visitAssignment(ctx);
     }
 
     @Override
-    public Void visitNewExpression(@NotNull JavaliParser.NewExpressionContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitIfStatement(IfStatementContext ctx) {
+        return new Ast.IfElse((Ast.Expr)ctx.expression().accept(this),
+                              ctx.statement(0).accept(this),
+                              ctx.statement(1).accept(this));
     }
 
     @Override
-    public Void visitFormalParameterList(@NotNull JavaliParser.FormalParameterListContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitWhileStatement(WhileStatementContext ctx) {
+        return new Ast.WhileLoop((Ast.Expr)ctx.expression().accept(this),
+                                  ctx.statement().accept(this));
     }
 
     @Override
-    public Void visitINT(@NotNull JavaliParser.INTContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitIntegerLiteral(IntegerLiteralContext ctx) {
+        return new Ast.IntConst((ctx.DecimalLiteral() != null)
+                ? Integer.parseInt(ctx.DecimalLiteral().getText(), 10)
+                : Integer.parseInt(ctx.HexLiteral().getText(), 16));
+    }
+    
+    @Override
+    public Ast visitCastExpression(CastExpressionContext ctx) {
+        if(ctx.referenceType() != null)
+            return new Ast.Cast((Ast.Expr)ctx.unaryExpression().accept(this),
+                                ctx.referenceType().getText());
+        return ctx.unaryExpression().accept(this);
     }
 
     @Override
-    public Void visitREAD(@NotNull JavaliParser.READContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitUnaryExpression(UnaryExpressionContext ctx) {
+        if(ctx.NOT() != null)
+            return new Ast.UnaryOp(Ast.UnaryOp.UOp.U_BOOL_NOT, (Ast.Expr)ctx.atom().accept(this));
+        if(ctx.PLUS() != null)
+            return new Ast.UnaryOp(Ast.UnaryOp.UOp.U_PLUS, (Ast.Expr)ctx.atom().accept(this));
+        if(ctx.MINUS() != null)
+            return new Ast.UnaryOp(Ast.UnaryOp.UOp.U_MINUS, (Ast.Expr)ctx.atom().accept(this));
+        return ctx.atom().accept(this);
     }
 
     @Override
-    public Void visitDIV(@NotNull JavaliParser.DIVContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitModifiedReference(ModifiedReferenceContext ctx) {
+        Ast.Expr left = (ctx.THIS() != null)
+                        ? new Ast.ThisRef()
+                        : new Ast.Var(ctx.Identifier().getText());
+        for(int i=0; i<ctx.referenceModifier().size(); i++){
+            ReferenceModifierContext mod = ctx.referenceModifier(i);
+            if(mod.arrayModifier() != null){
+                left = new Ast.Index(left, (Ast.Expr)mod.arrayModifier().expression().accept(this));
+            }else if(mod.fieldModifier() != null){
+                // This stupid schpiel is because of the dumb way calls work.
+                if(i+1<ctx.referenceModifier().size() && ctx.referenceModifier(i+1).callModifier() != null){
+                    ArrayList<Ast.Expr> args = new ArrayList<Ast.Expr>();
+                    for(ExpressionContext expr : ctx.referenceModifier(i+1).callModifier().expression()){
+                        args.add((Ast.Expr)expr.accept(this));
+                    }
+                    left = new Ast.MethodCallExpr(left, mod.fieldModifier().Identifier().getText(), args);
+                }else{
+                    left = new Ast.Field(left, mod.fieldModifier().Identifier().getText());
+                }
+            }
+        }
+        return left;
     }
 
     @Override
-    public Void visitUnit(@NotNull JavaliParser.UnitContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitLogandExpression(LogandExpressionContext ctx) {
+        Ast.Expr left = (Ast.Expr)ctx.equalityExpression(0).accept(this);
+        for(int i=1; i<ctx.equalityExpression().size(); i++){
+            EqualityExpressionContext node = ctx.equalityExpression(i);
+            left = new Ast.BinaryOp(left,
+                                    Ast.BinaryOp.BOp.B_AND,
+                                    (Ast.Expr)node.accept(this));
+        }
+        return left;
     }
 
     @Override
-    public Void visitNOT(@NotNull JavaliParser.NOTContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitLogiorExpression(LogiorExpressionContext ctx) {
+        Ast.Expr left = (Ast.Expr)ctx.logandExpression(0).accept(this);
+        for(int i=1; i<ctx.logandExpression().size(); i++){
+            LogandExpressionContext node = ctx.logandExpression(i);
+            left = new Ast.BinaryOp(left,
+                                    Ast.BinaryOp.BOp.B_OR,
+                                    (Ast.Expr)node.accept(this));
+        }
+        return left;
     }
 
     @Override
-    public Void visitIDENT(@NotNull JavaliParser.IDENTContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitMultiplicativeExpression(MultiplicativeExpressionContext ctx) {
+        Ast.Expr left = (Ast.Expr)ctx.castExpression(0).accept(this);
+        for(int i=1; i<ctx.castExpression().size(); i++){
+            CastExpressionContext node = ctx.castExpression(i);
+            left = new Ast.BinaryOp(left,
+                                    (ctx.TIMES() != null)? Ast.BinaryOp.BOp.B_TIMES:
+                                    (ctx.DIVIDE() != null)? Ast.BinaryOp.BOp.B_DIV:
+                                    (ctx.MODULUS() != null)? Ast.BinaryOp.BOp.B_MOD:
+                                    null,
+                                    (Ast.Expr)node.accept(this));
+        }
+        return left;
     }
 
     @Override
-    public Void visitMULT(@NotNull JavaliParser.MULTContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitAdditiveExpression(AdditiveExpressionContext ctx) {
+        Ast.Expr left = (Ast.Expr)ctx.multiplicativeExpression(0).accept(this);
+        for(int i=1; i<ctx.multiplicativeExpression().size(); i++){
+            MultiplicativeExpressionContext node = ctx.multiplicativeExpression(i);
+            left = new Ast.BinaryOp(left,
+                                    (ctx.PLUS() != null)? Ast.BinaryOp.BOp.B_PLUS:
+                                    (ctx.MINUS() != null)? Ast.BinaryOp.BOp.B_MINUS:
+                                    null,
+                                    (Ast.Expr)node.accept(this));
+        }
+        return left;
     }
 
     @Override
-    public Void visitBOOL(@NotNull JavaliParser.BOOLContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitComparativeExpression(ComparativeExpressionContext ctx) {
+        Ast.Expr left = (Ast.Expr)ctx.additiveExpression(0).accept(this);
+        for(int i=1; i<ctx.additiveExpression().size(); i++){
+            AdditiveExpressionContext node = ctx.additiveExpression(i);
+            left = new Ast.BinaryOp(left,
+                                    (ctx.LESS() != null)? Ast.BinaryOp.BOp.B_LESS_THAN:
+                                    (ctx.GREATER() != null)? Ast.BinaryOp.BOp.B_GREATER_THAN:
+                                    (ctx.LEQUAL() != null)? Ast.BinaryOp.BOp.B_LESS_OR_EQUAL:
+                                    (ctx.GEQUAL() != null)? Ast.BinaryOp.BOp.B_GREATER_OR_EQUAL:
+                                    null,
+                                    (Ast.Expr)node.accept(this));
+        }
+        return left;
     }
 
     @Override
-    public Void visitAND(@NotNull JavaliParser.ANDContext ctx) {
-        return visitChildren(ctx);
+    public Ast visitEqualityExpression(EqualityExpressionContext ctx) {
+        Ast.Expr left = (Ast.Expr)ctx.comparativeExpression(0).accept(this);
+        for(int i=1; i<ctx.comparativeExpression().size(); i++){
+            ComparativeExpressionContext node = ctx.comparativeExpression(i);
+            left = new Ast.BinaryOp(left,
+                                    (ctx.EQUAL() != null)? Ast.BinaryOp.BOp.B_EQUAL:
+                                    (ctx.NEQUAL() != null)? Ast.BinaryOp.BOp.B_NOT_EQUAL:
+                                    null,
+                                    (Ast.Expr)node.accept(this));
+        }
+        return left;
     }
 
-    @Override
-    public Void visitStatement(@NotNull JavaliParser.StatementContext ctx) {
-        return visitChildren(ctx);
-    }
-
-    @Override
-    public Void visitUNARY(@NotNull JavaliParser.UNARYContext ctx) {
-        return visitChildren(ctx);
-    }
-
-    @Override
-    public Void visitWrite(@NotNull JavaliParser.WriteContext ctx) {
-        return visitChildren(ctx);
-    }
 }

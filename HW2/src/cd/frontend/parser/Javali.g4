@@ -1,142 +1,179 @@
 grammar Javali;
 
 @header {
-	package cd.frontend.parser;
+    package cd.frontend.parser;
 }
 
 // PARSER RULES
 unit
- 	: classDecl + EOF
- 	;
+    : classDecl+ EOF
+    ;
 
 classDecl
-	: 'class' Identifier ('extends' Identifier)? '{' (declaration)* '}'
-	;
+    : 'class' Identifier ('extends' Identifier)? '{' (declaration)* '}'
+    ;
 
 methodDeclaration
-	: returnType Identifier '(' formalParameterList ')' '{' (variableDeclaration)* (statement)* '}'
-	;
+    : returnType Identifier '(' formalParameterList ')' '{' (variableDeclaration)* (statement)* '}'
+    ;
 
 variableDeclaration 
-	: type Identifier (',' Identifier)* ';'
-	;
+    : type Identifier (',' Identifier)* ';'
+    ;
 
 declaration
-	: variableDeclaration
-	| methodDeclaration
-	;
+    : variableDeclaration
+    | methodDeclaration
+    ;
 
 formalParameterList
-	:
-	| type Identifier (',' type Identifier)*
-	;
+    :
+    | type Identifier (',' type Identifier)*
+    ;
 
 statement
-	: ifStatement
-	| whileStatement
-	| assignment 
-	| write
-	| returnStatement
-	;
+    : ifStatement
+    | whileStatement
+    | assignment 
+    | write
+    | writeln
+    | returnStatement
+    ;
 
 ifStatement
-    : 'if' '(' booleanExpression ')' '{' statement '}' ('else' '{' statement '}')?
+    : 'if' '(' expression ')' '{' statement '}' ('else' '{' statement '}')?
     ;
 
 whileStatement
-    : 'while' '(' booleanExpression ')' '{' statement '}'
+    : 'while' '(' expression ')' '{' statement '}'
     ;
-	
+    
 assignment
-	: Identifier '=' expression ';'
-	;
+    : Identifier '=' expression ';'
+    ;
+
+write
+    : 'write' '(' expression ')' ';'
+    ;
+    
+writeln
+    : 'writeln' '(' ')' ';'
+    ;
 
 returnStatement
     : 'return' (expression)? ';'
     ;
 
 expression
-	: expression '==' expression
-	| expression '!=' expression
-	| integerExpression ('<=' | '<' | '>=' | '>') integerExpression
-	| booleanExpression 
-	| integerExpression
-	| newExpression
-	;
+    : logiorExpression
+    ;
 
-booleanExpression
-	: '!' booleanExpression
-	| booleanExpression '&&' booleanExpression
-	| booleanExpression '||' booleanExpression
-	| booleanLiteral
-	;
+atom
+    : booleanLiteral
+    | integerLiteral
+    | read
+    | modifiedReference
+    | '(' expression ')'
+    ;
 
-integerExpression
-	: ('+' | '-') integerExpression 
-	| integerExpression '*' integerExpression
-	| integerExpression '/' integerExpression
-	| integerExpression '+' integerExpression
-	| integerExpression '-' integerExpression
-	| read
-	| integerLiteral
-	| Identifier
-	;
+modifiedReference
+    : (Identifier | THIS) referenceModifier*
+    ;
+    
+referenceModifier
+    : arrayModifier
+    | fieldModifier
+    | callModifier
+    ;
 
-newExpression 
-	: 'new' ( Identifier '(' ')' 
-	| Identifier '[' expression ']'
-	| primitiveType '[' expression ']' )
-	;
+arrayModifier
+    : '[' expression ']'
+    ;
 
-write
-	: 'write' '(' expression ')' ';'
-	| 'writeln' '(' ')' ';'
-	;
+fieldModifier
+    : '.' Identifier
+    ;
+
+callModifier
+    : '(' ')'
+    | '(' expression (',' expression)* ')'
+    ;
+
+unaryExpression
+    : (PLUS | MINUS | NOT)? atom
+    ;
+
+castExpression
+    : ('(' referenceType ')')? unaryExpression
+    ;
+
+multiplicativeExpression
+    : castExpression ((TIMES | DIVIDE | MODULUS) castExpression)*
+    ;
+
+additiveExpression
+    : multiplicativeExpression ((PLUS | MINUS) multiplicativeExpression)*
+    ;
+
+comparativeExpression
+    : additiveExpression ((LEQUAL | GEQUAL | LESS | GREATER) additiveExpression)*
+    ;
+
+equalityExpression
+    : comparativeExpression ((EQUAL | NEQUAL) comparativeExpression)*
+    ;
+
+logandExpression
+    : equalityExpression (AND equalityExpression)*
+    ;
+
+logiorExpression
+    : logandExpression (OR logandExpression)*
+    ;
 
 read
     : 'read' '(' ')'
     ;
 
 literal
-	: integerLiteral
-	| booleanLiteral
-	| 'null'
-	;
-	
+    : integerLiteral
+    | booleanLiteral
+    | NULL
+    ;
+    
 integerLiteral
-	: HexLiteral
-	| DecimalLiteral
-	;
+    : HexLiteral
+    | DecimalLiteral
+    ;
 
 booleanLiteral
-	: FALSE
-	| TRUE
-	;
-	
-accessModifier
-	: 'public'
-	| 'private'
-	;
-	
+    : FALSE
+    | TRUE
+    ;
+    
 type
-	: arrayType
-	| primitiveType
-	| Identifier
-	;
+    : referenceType
+    | primitiveType
+    ;
+
+referenceType
+    : arrayType
+    | Identifier
+    ;
 
 primitiveType
-	: 'boolean'
-	| 'int'
-	;
+    : BOOLEAN
+    | INT
+    ;
 
 arrayType
-	: (primitiveType|Identifier) '[' ']'
-	;
+    : (primitiveType|Identifier) '[' ']'
+    ;
 
 returnType
-	: 'void'
-	| type
-	;
+    : VOID
+    | type
+    ;
 
 // LEXER RULES
 TRUE: 'true';
@@ -144,8 +181,6 @@ FALSE: 'false';
 NULL: 'null';
 CLASS: 'class';
 EXTENDS: 'extends';
-PUBLIC: 'public';
-PRIVATE: 'private';
 INT: 'int';
 BOOLEAN: 'boolean';
 VOID: 'void';
@@ -157,6 +192,7 @@ RETURN: 'return';
 IF: 'if';
 ELSE: 'else';
 WHILE: 'while';
+THIS: 'this';
 LPAREN: '(';
 RPAREN: ')';
 LBRACE: '{';
@@ -167,59 +203,61 @@ PLUS: '+';
 MINUS: '-';
 TIMES: '*';
 DIVIDE: '/';
+MODULUS: '%';
 AND: '&&';
 OR: '||';
 NOT: '!';
-EQUALS: '==';
-NEQUALS: '!=';
-GEQUALS: '>=';
-LEQUALS: '<=';
+EQUAL: '==';
+NEQUAL: '!=';
+GEQUAL: '>=';
+LEQUAL: '<=';
 LESS: '<';
 GREATER: '>';
 COMMA: ',';
 SEMICOLON: ';';
 ASSIGN: '=';
+DOT: '.';
 
 fragment
 Letter
-	: 'A'..'Z'
-	| 'a'..'z'
-	;
+    : 'A'..'Z'
+    | 'a'..'z'
+    ;
 
 fragment
 Digit
-	: '0'..'9'
-	;
+    : '0'..'9'
+    ;
 
 fragment
 HexDigit
-	: Digit 
-	| 'a'..'f'
-	| 'A'..'F'
-	;
-	
+    : Digit 
+    | 'a'..'f'
+    | 'A'..'F'
+    ;
+    
 DecimalLiteral
-	: '0'
-	| '1'..'9' (Digit)*
-	;
+    : '0'
+    | '1'..'9' (Digit)*
+    ;
 
 HexLiteral
-	: '0' [xX] (HexDigit)+
-	;
+    : '0' ('x' | 'X') (HexDigit)+
+    ;
 
 Identifier 
-	: Letter (Letter|Digit)*
-	;
+    : Letter (Letter|Digit)*
+    ;
 
 // comments and white space does not produce tokens:
 COMMENT
-	: '/*' .*? '*/' -> skip
-	;
+    : '/*' .*? '*/' -> skip
+    ;
 
 LINE_COMMENT
-	: '//' ~('\n'|'\r')* -> skip
-	;
+    : '//' ~('\n'|'\r')* -> skip
+    ;
 
 WS
-	: (' '|'\r'|'\t'|'\n') -> skip
-	;
+    : (' '|'\r'|'\t'|'\n') -> skip
+;
