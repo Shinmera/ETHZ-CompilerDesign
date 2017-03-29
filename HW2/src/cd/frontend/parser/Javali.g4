@@ -38,6 +38,7 @@ statement
     | write
     | writeln
     | returnStatement
+    | callStatement
     ;
 
 ifStatement
@@ -49,7 +50,7 @@ whileStatement
     ;
     
 assignment
-    : Identifier '=' expression ';'
+    : modifiedReference '=' expression ';'
     ;
 
 write
@@ -62,6 +63,10 @@ writeln
 
 returnStatement
     : 'return' (expression)? ';'
+    ;
+
+callStatement
+    : modifiedReference ';'
     ;
 
 expression

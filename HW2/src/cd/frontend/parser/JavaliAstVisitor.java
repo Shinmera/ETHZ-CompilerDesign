@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import cd.frontend.parser.JavaliParser.AdditiveExpressionContext;
 import cd.frontend.parser.JavaliParser.AssignmentContext;
 import cd.frontend.parser.JavaliParser.BooleanLiteralContext;
+import cd.frontend.parser.JavaliParser.CallStatementContext;
 import cd.frontend.parser.JavaliParser.CastExpressionContext;
 import cd.frontend.parser.JavaliParser.ClassDeclContext;
 import cd.frontend.parser.JavaliParser.ComparativeExpressionContext;
@@ -33,6 +34,7 @@ import cd.frontend.parser.JavaliParser.WriteContext;
 import cd.frontend.parser.JavaliParser.WritelnContext;
 import cd.ir.Ast;
 import cd.ir.Ast.ClassDecl;
+import cd.ir.Ast.MethodCallExpr;
 import cd.util.Pair;
 
 public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
@@ -76,8 +78,8 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         FormalParameterListContext params = ctx.formalParameterList(); 
         ArrayList<Pair<String>> formalParams = new ArrayList<Pair<String>>();
         for(int i=0; i<params.Identifier().size(); i++){
-            formalParams.add(new Pair<String>(params.Identifier(i).getText(),
-                                              params.type(i).getText()));
+            formalParams.add(new Pair<String>(params.type(i).getText(),
+                                              params.Identifier(i).getText()));
         }
 
         ArrayList<Ast> declarations = new ArrayList<Ast>();
@@ -125,7 +127,13 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 
     @Override
     public Ast visitAssignment(AssignmentContext ctx) {
-        return super.visitAssignment(ctx);
+        return new Ast.Assign((Ast.Expr)ctx.modifiedReference().accept(this),
+                              (Ast.Expr)ctx.expression().accept(this));
+    }
+
+    @Override
+    public Ast visitCallStatement(CallStatementContext ctx) {
+        return new Ast.MethodCall((MethodCallExpr)ctx.modifiedReference().accept(this));
     }
 
     @Override
@@ -177,16 +185,24 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
             if(mod.arrayModifier() != null){
                 left = new Ast.Index(left, (Ast.Expr)mod.arrayModifier().expression().accept(this));
             }else if(mod.fieldModifier() != null){
-                // This stupid schpiel is because of the dumb way calls work.
+                // Stupid, stupid.
                 if(i+1<ctx.referenceModifier().size() && ctx.referenceModifier(i+1).callModifier() != null){
                     ArrayList<Ast.Expr> args = new ArrayList<Ast.Expr>();
                     for(ExpressionContext expr : ctx.referenceModifier(i+1).callModifier().expression()){
                         args.add((Ast.Expr)expr.accept(this));
                     }
                     left = new Ast.MethodCallExpr(left, mod.fieldModifier().Identifier().getText(), args);
+                    i++;
                 }else{
                     left = new Ast.Field(left, mod.fieldModifier().Identifier().getText());
                 }
+            // This can only be called if the call is at first place.
+            }else if(mod.callModifier() != null){
+                ArrayList<Ast.Expr> args = new ArrayList<Ast.Expr>();
+                for(ExpressionContext expr : mod.callModifier().expression()){
+                    args.add((Ast.Expr)expr.accept(this));
+                }
+                left = new Ast.MethodCallExpr(new Ast.ThisRef(), ctx.Identifier().getText(), args);
             }
         }
         return left;
