@@ -12,7 +12,7 @@ grammar Javali; // parser grammar, parses streams of tokens
 //* // TODO: declare appropriate parser rules
 //* // NOTE: Remove //* from the beginning of each line.
 //* 
- unit
+unit
  	: classDecl + EOF
  	;
 
@@ -21,12 +21,12 @@ classDecl
 	;
 
 methodDeclaration
-	: ReturnType Identifier '(' formalParameterList ')' '{' (variableDeclaration)* (statement)* '}'
+	: returnType Identifier '(' formalParameterList ')' '{' (variableDeclaration)* (statement)* '}'
 	;
 
 variableDeclaration 
-	: Type Identifier (',' Identifier)* ';'
-	;	
+	: type Identifier (',' Identifier)* ';'
+	;
 
 declaration
 	: variableDeclaration
@@ -34,71 +34,161 @@ declaration
 	;
 
 formalParameterList
-	: Type Identifier (',' Type Identifier)*
+	:
+	| type Identifier (',' type Identifier)*
 	;
-
 
 statement
-	: 'if' '(' booleanExpression ')' 'then' '{' statement '}' 'else' '{' statement '}'
-	| 'if' '(' booleanExpression ')' 'then' '{' statement '}'
-	| 'while' '(' booleanExpression ')' '{' statement '}'
+	: ifStatement
+	| whileStatement
 	| assignment 
 	| write
-	| 'return' (expression)? ';'
+	| returnStatement
 	;
+
+ifStatement
+    : 'if' '(' booleanExpression ')' '{' statement '}' ('else' '{' statement '}')?
+    ;
+
+whileStatement
+    : 'while' '(' booleanExpression ')' '{' statement '}'
+    ;
 	
 assignment
 	: Identifier '=' expression ';'
 	;
-	 
+
+returnStatement
+    : 'return' (expression)? ';'
+    ;
 
 expression
 	: expression '==' expression
 	| expression '!=' expression
-	| integerExpression ('<' | '<=' | '>' | '>=') integerExpression
+	| integerExpression ('<=' | '<' | '>=' | '>') integerExpression
 	| booleanExpression 
 	| integerExpression
 	| newExpression
 	;
 
 booleanExpression
-	: '!' booleanExpression # NOT
-	| booleanExpression '&&' booleanExpression # AND
-	| booleanExpression '||' booleanExpression # OR
-	| Boolean # BOOL
+	: '!' booleanExpression
+	| booleanExpression '&&' booleanExpression
+	| booleanExpression '||' booleanExpression
+	| BooleanLiteral
 	;
 
 integerExpression
-	: ('+' | '-' ) integerExpression  # UNARY
-	| integerExpression '*' integerExpression # MULT
-	| integerExpression '/' integerExpression # DIV
-	| integerExpression '+' integerExpression # ADD
-	| integerExpression '-' integerExpression # SUB
-	| Read	# READ
-	| Identifier # IDENT
-	| Integer # INT
+	: ('+' | '-') integerExpression 
+	| integerExpression '*' integerExpression
+	| integerExpression '/' integerExpression
+	| integerExpression '+' integerExpression
+	| integerExpression '-' integerExpression
+	| read
+	| Identifier
+	| IntegerLiteral
 	;
 
 newExpression 
 	: 'new' ( Identifier '(' ')' 
 	| Identifier '[' expression ']'
-	| PrimitiveType '[' expression ']' )
+	| primitiveType '[' expression ']' )
 	;
 
 write
 	: 'write' '(' expression ')' ';'
-	| 'writeln' '('')' ';'
+	| 'writeln' '(' ')' ';'
+	;
+
+read
+    : 'read' '(' ')'
+    ;
+
+literal
+	: IntegerLiteral
+	| BooleanLiteral
+	| 'null'
+	;
+	
+accessModifier
+	: 'public'
+	| 'private'
+	;	
+
+// Types
+
+type
+	: arrayType
+	| primitiveType
+	| Identifier
+	;
+
+primitiveType
+	: 'boolean'
+	| 'int'
+	;
+
+arrayType
+	: (primitiveType|Identifier) '[' ']'
+	;
+
+returnType
+	: 'void'
+	| type
 	;
 
 
 // LEXER RULES
+
+// Keywords
+TRUE: 'true';
+FALSE: 'false';
+NULL: 'null';
+CLASS: 'class';
+EXTENDS: 'extends';
+PUBLIC: 'public';
+PRIVATE: 'private';
+INT: 'int';
+BOOLEAN: 'boolean';
+VOID: 'void';
+NEW: 'new';
+WRITE: 'write';
+WRITELN: 'writeln';
+READ: 'read';
+RETURN: 'return';
+IF: 'if';
+ELSE: 'else';
+WHILE: 'while';
+LPAREN: '(';
+RPAREN: ')';
+LBRACE: '{';
+RBRACE: '}';
+LBRACKET: '[';
+RBRACKET: ']';
+PLUS: '+';
+MINUS: '-';
+TIMES: '*';
+DIVIDE: '/';
+AND: '&&';
+OR: '||';
+NOT: '!';
+EQUALS: '==';
+NEQUALS: '!=';
+GEQUALS: '>=';
+LEQUALS: '<=';
+LESS: '<';
+GREATER: '>';
+COMMA: ',';
+SEMICOLON: ';';
+ASSIGN: '=';
+//
 
 Identifier 
 	: Letter (Letter|Digit)*
 	;
 	
 Read
-	: 'read()'
+	: READ LPAREN RPAREN
 	;
 
 fragment
@@ -107,10 +197,12 @@ Letter
 	| 'a'..'z'
 	;
 
+fragment
 Digit
 	: '0'..'9'
 	;
 
+fragment
 HexDigit
 	: Digit 
 	| 'a'..'f'
@@ -123,56 +215,18 @@ Decimal
 	;
 
 Hex
-	: ('0x' | '0X') (HexDigit)+
+	: '0' [xX] (HexDigit)+
 	;	
 
-Integer
+IntegerLiteral
 	: Hex
 	| Decimal
 	;
 	
-Boolean
-	: 'true'
-	| 'false'
+BooleanLiteral
+	: TRUE
+	| FALSE
 	;
-	
-Literal
-	: Integer
-	| Boolean
-	| 'null'
-	;
-	
-AccessModifier
-	: 'public'
-	| 'private'
-	;	
-
-// Types
-
-Type
-	: ReferenceType
-	| PrimitiveType
-	;
-
-PrimitiveType
-	: 'boolean'
-	| 'int'
-	;
-
-ReferenceType
-	: ArrayType
-	| Identifier
-	;
-
-ArrayType
-	: PrimitiveType '[' ']' 
-	| Identifier '[' ']'
-	;
-
-ReturnType
-	: 'void'
-	| Type
-	;	
 
 // comments and white space does not produce tokens:
 COMMENT
