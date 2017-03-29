@@ -1,17 +1,10 @@
-grammar Javali; // parser grammar, parses streams of tokens
+grammar Javali;
 
 @header {
-	// Java header
 	package cd.frontend.parser;
 }
 
-
-
 // PARSER RULES
-
-//* // TODO: declare appropriate parser rules
-//* // NOTE: Remove //* from the beginning of each line.
-//* 
 unit
  	: classDecl + EOF
  	;
@@ -113,10 +106,8 @@ literal
 accessModifier
 	: 'public'
 	| 'private'
-	;	
-
-// Types
-
+	;
+	
 type
 	: arrayType
 	| primitiveType
@@ -137,10 +128,7 @@ returnType
 	| type
 	;
 
-
 // LEXER RULES
-
-// Keywords
 TRUE: 'true';
 FALSE: 'false';
 NULL: 'null';
@@ -181,14 +169,9 @@ GREATER: '>';
 COMMA: ',';
 SEMICOLON: ';';
 ASSIGN: '=';
-//
 
 Identifier 
 	: Letter (Letter|Digit)*
-	;
-	
-Read
-	: READ LPAREN RPAREN
 	;
 
 fragment
