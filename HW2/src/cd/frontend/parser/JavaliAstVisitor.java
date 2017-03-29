@@ -1,40 +1,31 @@
 package cd.frontend.parser;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import cd.ToDoException;
 import cd.frontend.parser.JavaliParser.ClassDeclContext;
 import cd.frontend.parser.JavaliParser.DeclarationContext;
-import cd.frontend.parser.JavaliParser.FormalParameterListContext;
 import cd.frontend.parser.JavaliParser.MethodDeclarationContext;
 import cd.frontend.parser.JavaliParser.StatementContext;
 import cd.frontend.parser.JavaliParser.VariableDeclarationContext;
 import cd.ir.Ast;
 import cd.ir.Ast.ClassDecl;
-import cd.ir.Ast.Decl;
-import cd.ir.Ast.MethodDecl;
-import cd.ir.Ast.Seq;
-import cd.ir.Ast.VarDecl;
 import cd.util.Pair;
 
 public final class JavaliAstVisitor extends JavaliBaseVisitor<Void> {
 
     public List<ClassDecl> classDecls = new ArrayList<>();
-    public List<Decl> decls = new ArrayList<>();
-    public List<VarDecl> varDecls = new ArrayList<>();
-    public List<MethodDecl> methodDecls = new ArrayList<>();
-    public List<Pair<String>> formalParameters = new ArrayList<Pair<String>>();
+    public List<Ast> localDecls;
+    public List<Pair<String>> formalParams;
+    public List<Ast> statements;
 
     @Override
     public Void visitClassDecl(ClassDeclContext ctx) {
-
+        localDecls = new ArrayList<>();
+        
         // Superclass.
         String sClass = "Object";
 
@@ -60,13 +51,13 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Void> {
          */
         /*
          * // Test VarDecl decl2 = new VarDecl("int", "i"); VarDecl decl3 = new
-         * VarDecl("int", "j"); List <Decl> decls2 = new ArrayList<Decl>();
+         * VarDecl("int", "j"); List <Ast> decls2 = new ArrayList<Ast>();
          * decls2.add(decl2); decls2.add(decl3);
          */
 
-        // TODO decls List<Decl> not working. See ClassDecl definition of the
+        // TODO decls List<Ast> not working. See ClassDecl definition of the
         // field 'members'.
-        Ast.ClassDecl decl = new Ast.ClassDecl(name.getText(), sClass, decls);
+        Ast.ClassDecl decl = new Ast.ClassDecl(name.getText(), sClass, localDecls);
         classDecls.add(decl);
 
         return null;
@@ -74,25 +65,13 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Void> {
 
     @Override
     public Void visitDeclaration(DeclarationContext ctx) {
-
-        // List<Decl> list = new ArrayList<Ast.Decl>();
-
-        // Variable
         ctx.variableDeclaration().accept(this);
-
-        // Method
         ctx.methodDeclaration().accept(this);
-
-        decls.addAll(varDecls);
-        decls.addAll(methodDecls);
-
         return null;
-
     }
 
     @Override
     public Void visitVariableDeclaration(VariableDeclarationContext ctx) {
-
         // TEST for test case 6.
         /*
          * Ast.VarDecl varDecl = new Ast.VarDecl("int", "i");
@@ -107,7 +86,7 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Void> {
                 
         // Add to list.
         for (TerminalNode t : identifiers) {
-            varDecls.add(new Ast.VarDecl(type.getText(), t.getText()));
+            localDecls.add(new Ast.VarDecl(type.getText(), t.getText()));
         }
 
         return null;
@@ -115,7 +94,11 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Void> {
 
     @Override
     public Void visitMethodDeclaration(MethodDeclarationContext ctx) {
-
+        List<Ast> outerDecls = localDecls;
+        localDecls = new ArrayList<Ast>();
+        statements = new ArrayList<Ast>();
+        formalParams = new ArrayList<Pair<String>>();
+        
         // return type
         TerminalNode returnType = ctx.ReturnType();
 
@@ -134,9 +117,13 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Void> {
         for (StatementContext c : ctx.statement()) {
             c.accept(this);
         }
-
-        // Add to list.
-
+        
+        outerDecls.add(new Ast.MethodDecl(returnType.getText(),
+                                          name.getText(),
+                                          formalParams,
+                                          new Ast.Seq(localDecls),
+                                          new Ast.Seq(statements)));
+        localDecls = outerDecls;
         return null;
     }
 
