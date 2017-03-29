@@ -6,14 +6,18 @@ import java.util.List;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import cd.frontend.parser.JavaliParser.AdditiveExpressionContext;
+import cd.frontend.parser.JavaliParser.AdditiveOperandContext;
 import cd.frontend.parser.JavaliParser.AssignmentContext;
+import cd.frontend.parser.JavaliParser.AtomContext;
 import cd.frontend.parser.JavaliParser.BooleanLiteralContext;
 import cd.frontend.parser.JavaliParser.CallStatementContext;
 import cd.frontend.parser.JavaliParser.CastExpressionContext;
 import cd.frontend.parser.JavaliParser.ClassDeclContext;
 import cd.frontend.parser.JavaliParser.ComparativeExpressionContext;
+import cd.frontend.parser.JavaliParser.ComparativeOperandContext;
 import cd.frontend.parser.JavaliParser.DeclarationContext;
 import cd.frontend.parser.JavaliParser.EqualityExpressionContext;
+import cd.frontend.parser.JavaliParser.EqualityOperandContext;
 import cd.frontend.parser.JavaliParser.ExpressionContext;
 import cd.frontend.parser.JavaliParser.FormalParameterListContext;
 import cd.frontend.parser.JavaliParser.IfStatementContext;
@@ -23,6 +27,7 @@ import cd.frontend.parser.JavaliParser.LogiorExpressionContext;
 import cd.frontend.parser.JavaliParser.MethodDeclarationContext;
 import cd.frontend.parser.JavaliParser.ModifiedReferenceContext;
 import cd.frontend.parser.JavaliParser.MultiplicativeExpressionContext;
+import cd.frontend.parser.JavaliParser.MultiplicativeOperandContext;
 import cd.frontend.parser.JavaliParser.ReadContext;
 import cd.frontend.parser.JavaliParser.ReferenceModifierContext;
 import cd.frontend.parser.JavaliParser.ReturnStatementContext;
@@ -162,14 +167,6 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
                 ? Integer.parseInt(ctx.DecimalLiteral().getText(), 10)
                 : Integer.parseInt(ctx.HexLiteral().getText(), 16));
     }
-    
-    @Override
-    public Ast visitCastExpression(CastExpressionContext ctx) {
-        if(ctx.referenceType() != null)
-            return new Ast.Cast((Ast.Expr)ctx.unaryExpression().accept(this),
-                                ctx.referenceType().getText());
-        return ctx.unaryExpression().accept(this);
-    }
 
     @Override
     public Ast visitUnaryExpression(UnaryExpressionContext ctx) {
@@ -180,6 +177,14 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         if(ctx.MINUS() != null)
             return new Ast.UnaryOp(Ast.UnaryOp.UOp.U_MINUS, (Ast.Expr)ctx.atom().accept(this));
         return ctx.atom().accept(this);
+    }
+    
+    @Override
+    public Ast visitCastExpression(CastExpressionContext ctx) {
+        if(ctx.referenceType() != null)
+            return new Ast.Cast((Ast.Expr)ctx.unaryExpression().accept(this),
+                                ctx.referenceType().getText());
+        return ctx.unaryExpression().accept(this);
     }
 
     @Override
@@ -244,10 +249,11 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         Ast.Expr left = (Ast.Expr)ctx.castExpression(0).accept(this);
         for(int i=1; i<ctx.castExpression().size(); i++){
             CastExpressionContext node = ctx.castExpression(i);
+            MultiplicativeOperandContext op = ctx.multiplicativeOperand(i-1);
             left = new Ast.BinaryOp(left,
-                                    (ctx.TIMES() != null)? Ast.BinaryOp.BOp.B_TIMES:
-                                    (ctx.DIVIDE() != null)? Ast.BinaryOp.BOp.B_DIV:
-                                    (ctx.MODULUS() != null)? Ast.BinaryOp.BOp.B_MOD:
+                                    (op.TIMES() != null)? Ast.BinaryOp.BOp.B_TIMES:
+                                    (op.DIVIDE() != null)? Ast.BinaryOp.BOp.B_DIV:
+                                    (op.MODULUS() != null)? Ast.BinaryOp.BOp.B_MOD:
                                     null,
                                     (Ast.Expr)node.accept(this));
         }
@@ -259,9 +265,10 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         Ast.Expr left = (Ast.Expr)ctx.multiplicativeExpression(0).accept(this);
         for(int i=1; i<ctx.multiplicativeExpression().size(); i++){
             MultiplicativeExpressionContext node = ctx.multiplicativeExpression(i);
+            AdditiveOperandContext op = ctx.additiveOperand(i-1);
             left = new Ast.BinaryOp(left,
-                                    (ctx.PLUS() != null)? Ast.BinaryOp.BOp.B_PLUS:
-                                    (ctx.MINUS() != null)? Ast.BinaryOp.BOp.B_MINUS:
+                                    (op.PLUS() != null)? Ast.BinaryOp.BOp.B_PLUS:
+                                    (op.MINUS() != null)? Ast.BinaryOp.BOp.B_MINUS:
                                     null,
                                     (Ast.Expr)node.accept(this));
         }
@@ -273,11 +280,12 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         Ast.Expr left = (Ast.Expr)ctx.additiveExpression(0).accept(this);
         for(int i=1; i<ctx.additiveExpression().size(); i++){
             AdditiveExpressionContext node = ctx.additiveExpression(i);
+            ComparativeOperandContext op = ctx.comparativeOperand(i-1);
             left = new Ast.BinaryOp(left,
-                                    (ctx.LESS() != null)? Ast.BinaryOp.BOp.B_LESS_THAN:
-                                    (ctx.GREATER() != null)? Ast.BinaryOp.BOp.B_GREATER_THAN:
-                                    (ctx.LEQUAL() != null)? Ast.BinaryOp.BOp.B_LESS_OR_EQUAL:
-                                    (ctx.GEQUAL() != null)? Ast.BinaryOp.BOp.B_GREATER_OR_EQUAL:
+                                    (op.LESS() != null)? Ast.BinaryOp.BOp.B_LESS_THAN:
+                                    (op.GREATER() != null)? Ast.BinaryOp.BOp.B_GREATER_THAN:
+                                    (op.LEQUAL() != null)? Ast.BinaryOp.BOp.B_LESS_OR_EQUAL:
+                                    (op.GEQUAL() != null)? Ast.BinaryOp.BOp.B_GREATER_OR_EQUAL:
                                     null,
                                     (Ast.Expr)node.accept(this));
         }
@@ -289,13 +297,23 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         Ast.Expr left = (Ast.Expr)ctx.comparativeExpression(0).accept(this);
         for(int i=1; i<ctx.comparativeExpression().size(); i++){
             ComparativeExpressionContext node = ctx.comparativeExpression(i);
+            EqualityOperandContext op = ctx.equalityOperand(i-1);
             left = new Ast.BinaryOp(left,
-                                    (ctx.EQUAL() != null)? Ast.BinaryOp.BOp.B_EQUAL:
-                                    (ctx.NEQUAL() != null)? Ast.BinaryOp.BOp.B_NOT_EQUAL:
+                                    (op.EQUAL() != null)? Ast.BinaryOp.BOp.B_EQUAL:
+                                    (op.NEQUAL() != null)? Ast.BinaryOp.BOp.B_NOT_EQUAL:
                                     null,
                                     (Ast.Expr)node.accept(this));
         }
         return left;
+    }
+
+    @Override
+    public Ast visitAtom(AtomContext ctx) {
+        // No idea why this is necessary, but it was one hell of a piss show
+        // to figure out that I had to do this.
+        if(ctx.expression() != null)
+            return ctx.expression().accept(this);
+        else return super.visitAtom(ctx);
     }
 
 }

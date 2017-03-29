@@ -113,19 +113,35 @@ castExpression
     ;
 
 multiplicativeExpression
-    : castExpression ((TIMES | DIVIDE | MODULUS) castExpression)*
+    : castExpression (multiplicativeOperand castExpression)*
+    ;
+
+multiplicativeOperand
+    : (TIMES | DIVIDE | MODULUS)
     ;
 
 additiveExpression
-    : multiplicativeExpression ((PLUS | MINUS) multiplicativeExpression)*
+    : multiplicativeExpression (additiveOperand multiplicativeExpression)*
+    ;
+
+additiveOperand
+    : (PLUS | MINUS)
     ;
 
 comparativeExpression
-    : additiveExpression ((LEQUAL | GEQUAL | LESS | GREATER) additiveExpression)*
+    : additiveExpression (comparativeOperand additiveExpression)*
+    ;
+
+comparativeOperand
+    : (LEQUAL | GEQUAL | LESS | GREATER)
     ;
 
 equalityExpression
-    : comparativeExpression ((EQUAL | NEQUAL) comparativeExpression)*
+    : comparativeExpression (equalityOperand comparativeExpression)*
+    ;
+
+equalityOperand
+    : (EQUAL | NEQUAL)
     ;
 
 logandExpression
