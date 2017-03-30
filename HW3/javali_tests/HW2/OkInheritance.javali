@@ -1,0 +1,12 @@
+class Base {
+}
+
+class Extends extends Base {
+}
+
+class Main {
+   void main() {
+      write(0);
+      writeln();
+   }
+}
