@@ -1,0 +1,40 @@
+class Base {
+	void baseMethod(int x) {
+		return (x * 2);
+	}
+}
+
+class One extends Base {
+	int oneMethod(Base b) {
+	
+		int x;
+		x = b.baseMethod(10);
+		
+		return x;
+	}
+}
+
+class Two extends Base {
+	int[] twoMethod(int j){
+		int[] a;
+		a = new int[j];
+		a[j-1] = j + 1;
+		return (a);
+	}
+}
+
+class Main {
+	
+	void main() {
+	
+	   int[] arr; 
+	   Base b;
+	   One o;
+	   Two t;
+	       
+		arr = t.twoMethod(12);
+		arr[0] = o.oneMethod(b);
+      
+	}
+	
+}

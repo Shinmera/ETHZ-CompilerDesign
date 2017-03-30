@@ -1,0 +1,38 @@
+class Main {
+ 
+   void main() {
+   
+   int i1,i2,i3,i4,i5,i6;
+   
+   i1 = read();
+   i2 = read();
+   i3 = read();
+   i4 = read();
+   i5 = read();
+   i6 = read();
+   
+   		if (i1 == i2) {
+   		
+   			i3 = i1 + i2;
+   
+   		} else {
+   			if (i3 > i4) {
+   				if (i5 != i6) {
+   					i5 = i6 * i5;
+   				}
+   			}
+   			else {
+   				if (i3 > i2) {
+   					i3 = i2;
+   				}
+   				
+   				if(i3 > i1) {
+   					i4 = i3 - i1;
+   				}
+   			
+   			}
+   		
+   		}
+
+   }
+}

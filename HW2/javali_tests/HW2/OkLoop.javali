@@ -1,0 +1,16 @@
+class Main {
+
+   void main() {
+   
+      	int i;
+    	i = read();
+    	
+      	while(i > 0) {
+         	
+         	write(i);
+         
+         	i = i + 1;
+       }
+         
+  	}
+}

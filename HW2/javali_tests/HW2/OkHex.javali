@@ -1,0 +1,13 @@
+class Main {
+
+   void main() {
+   
+      	int hex1;
+      	int hex2;
+      	int i;
+         
+        hex1 = 0xfff;
+        hex2 = 0x001;
+        i = hex1 + hex2;
+  	}
+}

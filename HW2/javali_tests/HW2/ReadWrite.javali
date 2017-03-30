@@ -1,0 +1,23 @@
+class Base {
+
+}
+
+class Main {
+
+   int field;
+  
+   void method(int i, Base b ) { 
+   
+  		field = read()
+      	write(this.field);
+      	writeln();
+      	write(i);
+      	writeln();
+   }
+ 
+  
+   void main() {
+      Base base = new Base();
+      method(2, base);
+   }
+}

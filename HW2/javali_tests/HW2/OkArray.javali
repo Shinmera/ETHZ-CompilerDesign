@@ -1,0 +1,11 @@
+class Main {
+  
+   void main() {
+      int[] a;
+      a = new int[12];
+      
+      a[1] = 12;
+      
+      write(a[1]);
+   }
+}

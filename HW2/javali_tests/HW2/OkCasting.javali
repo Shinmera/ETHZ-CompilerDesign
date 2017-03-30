@@ -1,0 +1,14 @@
+class Parent {
+}
+
+class Child extends Parent {
+}
+
+class Main {
+   void main() {
+      
+   	Child child = new Child ();
+	Parent parent = child;
+      
+   }
+}
