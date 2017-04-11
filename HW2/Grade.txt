@@ -1,0 +1,21 @@
+Grade: 15/30
+
+ * out-of-bounds int literal (+/-2147483648) not handled gracefully (i.e., ParseFailure)
+ * JavaliAstVisitor does not handle hex literals
+ 
+ * in visitCallStatement() you sometimes try to cast a Ast.Field to an Ast.MethodCallExpr (-2pt)
+ * you don't support any "new XXX" expression (-3pt)
+ * if-else and while only support 1 statement in their statement blocks (-4pt)
+ * visitIfStatement throws NullPointerException if else-part is empty (-2pt)
+ * a "m(a, null);" statement is not supported by the grammar (-3pt)
+ * "--1" is not supported by the grammar (-1pt)
+...
+
+TESTING: 3/5
+ - no HW2_team folder
+ - you don't cover a lot of language features
+ 
+
+Instead of continuing to list all the bugs that our tests exposed, I try to judge what is there and appears to work. I see that your grammar is incomplete, but handles some of the tricky parts. However, I have to wonder why you deviate so much from the grammer given in the Javali language specification. Implementing that grammar should not have been a lot of work.
+
+Your JavaliAstVisitor is also incomplete, but again contains some of the important building blocks. With this in mind, I can give you 15 out of 30 points.
