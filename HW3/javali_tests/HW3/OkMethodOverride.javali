@@ -1,0 +1,18 @@
+// Test that correct overriding of method throws no exception.
+class Main {
+   void main() {
+   }
+}
+
+class Woo {
+	int method (boolean b, Moo moo, int i ){
+		return 1;
+	}
+}
+
+class Foo extends Woo{
+	int method (boolean boo, Moo moomoo, int i1){
+		return i1;
+	}
+}
+class Moo {}

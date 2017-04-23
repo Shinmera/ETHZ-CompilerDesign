@@ -1,0 +1,21 @@
+// Test that correct casts throw no exception.
+class Main {
+   void main() {
+   		Woo woo;
+   		Moo moo;
+   		MooMoo moomoo;
+  		int i1,i2;
+  		
+  		i1 = (int) i2;
+  		
+  		moomoo = (MooMoo) moo.woo;
+  		woo = (Woo) moo;
+  		moo = (Moo) woo;
+   }
+}
+
+class Woo {}
+class Moo extends Woo {}
+class MooMoo extends Moo {
+	Woo woo;
+}

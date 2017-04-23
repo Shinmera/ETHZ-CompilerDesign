@@ -1,0 +1,7 @@
+ClassDecl (name: Foo, superClass: Bar)
+ClassDecl (name: Bar, superClass: Foo)
+ClassDecl (name: Main, superClass: Object)
+| MethodDecl (argumentNames: [], argumentTypes: [], name: main, returnType: void)
+| | Seq ()
+| | Seq ()
+| | | BuiltInWriteln ()

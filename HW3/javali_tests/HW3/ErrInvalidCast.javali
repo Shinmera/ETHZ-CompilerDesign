@@ -1,0 +1,13 @@
+// Test that invalid cast is detected.
+class Main {
+   void main() {
+  		Woo woo;
+  		Moo moo;
+  		
+  		moo = (Moo)woo;
+   }
+}
+
+class Woo() {}
+
+class Moo() {}

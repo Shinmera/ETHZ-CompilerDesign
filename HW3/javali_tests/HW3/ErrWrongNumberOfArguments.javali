@@ -1,0 +1,18 @@
+// Test that wrong number of arguments in method call is detected.
+class Main {
+	int i2;
+   void main() {
+   		Moo moo, moo1, moo2;
+   		int i1;
+   		
+   		i1 = moo.method(moo1);
+   }
+}
+
+class Woo {
+	int method(Moo moo, Moo moo2){
+		return 1;
+	}
+}
+class Moo{}
+class Foo extends Moo{}

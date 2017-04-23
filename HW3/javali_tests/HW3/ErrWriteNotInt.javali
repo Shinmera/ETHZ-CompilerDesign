@@ -1,0 +1,11 @@
+class Main {
+	void main{
+		Foo foo;
+		//write(foo);
+		foo.a;
+	}
+}
+
+class Foo {
+	int a;
+}

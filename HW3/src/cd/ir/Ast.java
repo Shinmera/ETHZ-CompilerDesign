@@ -5,12 +5,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import cd.frontend.semantic.SymbolTable;
 import cd.ir.Symbol.ClassSymbol;
 import cd.ir.Symbol.MethodSymbol;
 import cd.ir.Symbol.TypeSymbol;
 import cd.ir.Symbol.VariableSymbol;
 import cd.util.Pair;
 import cd.util.debug.AstOneLine;
+
+// TODO define typecheck method for each node.
 
 public abstract class Ast {
 
@@ -79,6 +82,11 @@ public abstract class Ast {
 		
 		/** Type that this expression will evaluate to (computed in semantic phase). */
 		public TypeSymbol type;
+		
+		
+		public void typecheck(SymbolTable table){
+			
+		}
 		
 		@Override
         public <R,A> R accept(AstVisitor<R, A> visitor, A arg) {
@@ -182,6 +190,52 @@ public abstract class Ast {
 		        case B_TIMES:
 		        case B_AND:
 		        case B_OR:
+		        case B_EQUAL:
+		        case B_NOT_EQUAL:
+		            return true;
+		        default:
+		            return false;
+		        }
+			}
+			
+			public boolean isBooleanOperation() {
+				switch(this) {
+		        case B_AND:
+		        case B_OR:
+	
+		            return true;
+		        default:
+		            return false;
+		        }
+			}
+			
+			public boolean isIntToIntOperation() {
+				switch(this) {
+		        case B_PLUS:
+		        case B_TIMES:
+		        case B_DIV:
+		        case B_MOD:
+		        case B_MINUS:
+		            return true;
+		        default:
+		            return false;
+		        }
+			}
+			
+			public boolean isIntToBooleanOperation() {
+				switch(this) {
+		        case B_LESS_THAN:
+		        case B_LESS_OR_EQUAL:
+		        case B_GREATER_THAN:
+		        case B_GREATER_OR_EQUAL:
+		            return true;
+		        default:
+		            return false;
+		        }
+			}
+			
+			public boolean isEqualityOperation() {
+				switch(this) {
 		        case B_EQUAL:
 		        case B_NOT_EQUAL:
 		            return true;
@@ -727,6 +781,9 @@ public abstract class Ast {
 		public String name;
 		public String superClass;
 		public ClassSymbol sym;
+		
+		// TODO Maybe add reference to SymbolTable
+		// public SymbolTable table;
 		
 		public ClassDecl(
 				String name, 

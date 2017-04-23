@@ -1,0 +1,9 @@
+// Test that invalid cast is detected.
+class Main {
+   void main() {
+  		int i1;
+  		boolean b;
+  		
+  		i1 = (int) b;
+   }
+}

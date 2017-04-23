@@ -1,0 +1,17 @@
+class Main {
+	void main(){
+	}
+}
+class Woo {
+
+	boolean i1;
+}
+
+class Moo extends Woo{
+	int i1;
+}
+
+class Boo {
+	Woo woo;
+	Moo woo;
+}

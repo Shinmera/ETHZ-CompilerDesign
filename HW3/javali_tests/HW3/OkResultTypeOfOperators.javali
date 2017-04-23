@@ -1,0 +1,39 @@
+// Tests that all types within operations are correct.
+class Main {
+   void main() {
+  		Woo woo;
+  		Moo moo;
+  		woo = new Woo();
+	
+  		boolean b1;
+  		int i1, i2;
+		
+		i1 = 10;
+		i2 = 100;
+		
+		i1 = (i2 % 15) * 2;
+		i2 = (i1 / 2) + i1 - 12;
+
+  		b1 = !woo.method(1,2);
+  		b1 = b1 && true;
+  		b1 = b1 || (i1 < i2);
+  		b1 = (i1 >= i2);
+  		b1 = (i1 <= i2);
+  		b1 = (i1 > i2);
+  		
+  		b1 = (moo == woo);
+  		b1 = (i1 != i2);
+   }
+}
+
+class Woo() {
+	boolean b;
+	boolean method(int i1, int i2) {
+		b = (i1 == i2);
+		return b;
+	}
+}
+
+class Moo() extends Woo {
+
+}

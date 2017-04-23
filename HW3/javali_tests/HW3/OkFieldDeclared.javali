@@ -1,0 +1,18 @@
+// Test that the declared field in superclass does not throw exception.
+class Main {
+	int i2;
+   void main() {
+   		Moo moo;
+   
+		i2 = moo.i3;
+   }
+}
+class Woo {
+	int i3;
+}
+
+class Moo extends Woo {
+	void method () {
+		i3 = 1;
+	}
+}

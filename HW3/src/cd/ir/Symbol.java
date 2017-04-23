@@ -6,25 +6,31 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class Symbol {
-	
+
 	public final String name;
-	
+
 	public static abstract class TypeSymbol extends Symbol {
-		
+
 		public TypeSymbol(String name) {
 			super(name);
 		}
 
 		public abstract boolean isReferenceType();
-		
+
+		public abstract boolean isClassType();
+
+		public boolean isArrayType() {
+			return false;
+		}
+
 		public String toString() {
 			return name;
 		}
-		
+
 	}
-	
+
 	public static class PrimitiveTypeSymbol extends TypeSymbol {
-		
+
 		/** Symbols for the built-in primitive types */
 		public static final PrimitiveTypeSymbol intType = new PrimitiveTypeSymbol("int");
 		public static final PrimitiveTypeSymbol voidType = new PrimitiveTypeSymbol("void");
@@ -32,64 +38,85 @@ public abstract class Symbol {
 
 		public PrimitiveTypeSymbol(String name) {
 			super(name);
-		}		
-		
+		}
+
 		public boolean isReferenceType() {
 			return false;
 		}
+
+		public boolean isClassType() {
+			return false;
+		}
 	}
-	
+
 	public static class ArrayTypeSymbol extends TypeSymbol {
 		public final TypeSymbol elementType;
 		
+		public TypeSymbol getElementType(){ return elementType; }
+
 		public ArrayTypeSymbol(TypeSymbol elementType) {
-			super(elementType.name+"[]");
+			super(elementType.name + "[]");
 			this.elementType = elementType;
 		}
-		
+
 		public boolean isReferenceType() {
 			return true;
 		}
-		
+
+		public boolean isClassType() {
+			return elementType.isClassType();
+		}
+
+		public boolean isArrayType() {
+			return true;
+		}
 	}
-	
+
 	public static class ClassSymbol extends TypeSymbol {
 		public final Ast.ClassDecl ast;
 		public ClassSymbol superClass;
-		public final VariableSymbol thisSymbol =
-			new VariableSymbol("this", this);
-		public final Map<String, VariableSymbol> fields = 
-			new HashMap<String, VariableSymbol>();
-		public final Map<String, MethodSymbol> methods =
-			new HashMap<String, MethodSymbol>();
+
+		// "this"
+		public final VariableSymbol thisSymbol = new VariableSymbol("this", this);
+		// fields
+		public final Map<String, VariableSymbol> fields = new HashMap<String, VariableSymbol>();
+		// methods
+		public final Map<String, MethodSymbol> methods = new HashMap<String, MethodSymbol>();
 
 		/** Symbols for the built-in Object and null types */
 		public static final ClassSymbol nullType = new ClassSymbol("<null>");
-		public static final ClassSymbol objectType = new ClassSymbol("Object"); 
-		
+		public static final ClassSymbol objectType = new ClassSymbol("Object");
+
 		public ClassSymbol(Ast.ClassDecl ast) {
 			super(ast.name);
 			this.ast = ast;
 		}
-		
-		/** Used to create the default {@code Object} 
-		 *  and {@code <null>} types */
+
+		/**
+		 * Used to create the default {@code Object} and {@code <null>} types
+		 */
 		public ClassSymbol(String name) {
 			super(name);
 			this.ast = null;
 		}
-		
+
 		public boolean isReferenceType() {
 			return true;
 		}
-		
+
+		public boolean isClassType() {
+			return true;
+		}
+
+		// Get field by name
 		public VariableSymbol getField(String name) {
 			VariableSymbol fsym = fields.get(name);
 			if (fsym == null && superClass != null)
 				return superClass.getField(name);
 			return fsym;
 		}
-		
+
+		// Get method by name
 		public MethodSymbol getMethod(String name) {
 			MethodSymbol msym = methods.get(name);
 			if (msym == null && superClass != null)
@@ -99,31 +126,36 @@ public abstract class Symbol {
 	}
 
 	public static class MethodSymbol extends Symbol {
-		
+
 		public final Ast.MethodDecl ast;
-		public final Map<String, VariableSymbol> locals =
-			new HashMap<String, VariableSymbol>();
-		public final List<VariableSymbol> parameters =
-			new ArrayList<VariableSymbol>();
-		
+
+		// local variables
+		public final Map<String, VariableSymbol> locals = new HashMap<String, VariableSymbol>();
+		// parameters
+		public final List<VariableSymbol> parameters = new ArrayList<VariableSymbol>();
+
+		// return type
 		public TypeSymbol returnType;
-		
+
 		public MethodSymbol(Ast.MethodDecl ast) {
 			super(ast.name);
 			this.ast = ast;
 		}
-		
+
 		public String toString() {
 			return name + "(...)";
 		}
 	}
-	
+
 	public static class VariableSymbol extends Symbol {
-		
-		public static enum Kind { PARAM, LOCAL, FIELD };
+
+		public static enum Kind {
+			PARAM, LOCAL, FIELD
+		};
+
 		public final TypeSymbol type;
 		public final Kind kind;
-		
+
 		public VariableSymbol(String name, TypeSymbol type) {
 			this(name, type, Kind.PARAM);
 		}
@@ -131,9 +163,9 @@ public abstract class Symbol {
 		public VariableSymbol(String name, TypeSymbol type, Kind kind) {
 			super(name);
 			this.type = type;
-			this.kind = kind;		
+			this.kind = kind;
 		}
-		
+
 		public String toString() {
 			return name;
 		}

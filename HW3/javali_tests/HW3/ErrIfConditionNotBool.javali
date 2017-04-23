@@ -1,0 +1,21 @@
+// Test that invalid condition type of if-statement is detected.
+class Main {
+   void main() {
+  		Woo woo;
+  		woo = new Woo();
+  		
+  		if (woo.method(1,2)) {
+  			write(1);
+  		} else {
+  			write(0);
+  		}
+   }
+}
+
+class Woo() {
+	boolean b;
+	boolean method(int i1, int i2) {
+		b = (i1 == i2);
+		return b;
+	}
+}

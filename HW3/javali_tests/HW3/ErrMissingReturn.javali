@@ -1,0 +1,19 @@
+// Test that missing return statement is detected.
+class Main {
+	int i2;
+   void main() {
+   		Moo moo;
+   
+		i2 = moo.method();
+   }
+}
+class Woo {
+	int i3;
+	int method () {
+		i3 = 1;
+	}
+}
+
+class Moo extends Woo {
+	
+}

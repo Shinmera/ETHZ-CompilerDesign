@@ -11,12 +11,12 @@ class Main {
       write(withArg);
       writeln();
    }
-  
+  /*
    void main() {
       this.field = 3;
       method(field);
       method(3);
       method(this.field);
       method();
-   }
+   }*/
 }

@@ -1,0 +1,15 @@
+// Test that return type is subtype of type in formal parameters.
+class Main {
+   void main() {
+   }
+}
+
+class Woo {
+	Moo method(Moo moo) {
+		Foo foo;
+		foo = (Foo)moo;
+		return foo;
+	}
+}
+class Moo{}
+class Foo extends Moo{}

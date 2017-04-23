@@ -1,0 +1,12 @@
+// The variable i1 is declared in the formal parameters
+
+class Main {
+	void main(){
+	}
+}
+class Woo {
+
+	void foo(int i1, boolean boo) {
+		i1 = 50;
+	}
+}

@@ -1,0 +1,19 @@
+// Test that invalid method invocation is detected.
+class Main {
+	int i2;
+   void main() {
+   		Woo woo;
+   		Woo woo2;
+   		Foo foo;
+  		
+  		i2 = woo.method(i2, false, woo2); 
+   }
+}
+
+class Woo {
+	int method (int i1, boolean b, Moo moo) {
+		return i1;
+	}
+}
+class Moo{}
+class Foo extends Moo{}

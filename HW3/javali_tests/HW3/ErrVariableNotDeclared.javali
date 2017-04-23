@@ -1,0 +1,10 @@
+// Test that undeclared variable is detected.
+class Main {
+	int i2;
+   void main() {
+		i3 = 1;
+   }
+}
+class Woo {
+	int i3;
+}

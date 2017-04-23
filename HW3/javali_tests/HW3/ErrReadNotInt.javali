@@ -1,0 +1,7 @@
+// Test that invalid read is detected.
+class Main {
+   void main() {
+   
+   boolean i3 = read();
+   }
+}

@@ -1,0 +1,10 @@
+/* Test that the circular inheritance between Foo, Moo and Bar is detected */
+class Foo extends Moo { }
+class Bar extends Foo { }
+class Moo extends Bar { }
+
+class Main {
+   void main() {
+      writeln();
+   }
+}

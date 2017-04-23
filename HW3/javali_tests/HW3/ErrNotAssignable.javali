@@ -1,0 +1,20 @@
+// Test that assignment to wrong expression is detected.
+class Main {
+	int i2;
+   void main() {
+   		Moo moo;
+   
+		moo.method() = moo.method();
+   }
+}
+class Woo {
+	int i3;
+	int method () {
+		i3 = 1;
+		return i3;
+	}
+}
+
+class Moo extends Woo {
+	
+}

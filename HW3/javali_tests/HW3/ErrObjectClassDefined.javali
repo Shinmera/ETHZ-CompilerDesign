@@ -1,0 +1,11 @@
+// Test if invalid declaration of class Object is detected.
+class Main {
+   void main() {
+   }
+}
+
+class Object {
+	int method (){
+	
+	}
+}

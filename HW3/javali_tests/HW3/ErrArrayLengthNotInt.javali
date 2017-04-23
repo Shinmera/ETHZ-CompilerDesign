@@ -1,0 +1,9 @@
+// Test that invalid type of lenght of array is detected.
+class Main {
+   void main() {
+  		int[] i1;
+  		boolean b;
+  		
+  		i1 = new int[b];
+   }
+}

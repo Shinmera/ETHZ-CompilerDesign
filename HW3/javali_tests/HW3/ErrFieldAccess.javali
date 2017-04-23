@@ -1,0 +1,15 @@
+// Test that invalid field access is detected.
+class Main {
+	int i2;
+   void main() {
+   		Woo woo;
+   		Foo foo;
+   		int[] i3;
+  		
+  		woo = i3.field;
+   }
+}
+
+class Woo {}
+class Moo{}
+class Foo extends Moo{}

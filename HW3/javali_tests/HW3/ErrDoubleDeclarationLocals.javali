@@ -1,0 +1,14 @@
+class Main {
+	void main{}
+}
+class Foo extends Woo {
+	void foo(int a, boolean b){
+		int b;
+	}
+}
+
+class Woo {
+	void foo(int a, boolean b){
+		
+	}
+}

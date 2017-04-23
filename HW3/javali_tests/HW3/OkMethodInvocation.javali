@@ -1,0 +1,18 @@
+// Test that method invocation throws no exception.
+class Main {
+	int i2;
+   void main() {
+   		Woo woo;
+   		Foo foo;
+  		
+  		i2 = woo.method(i2, false, foo); 
+   }
+}
+
+class Woo {
+	int method (int i1, boolean b, Moo moo) {
+		return i1;
+	}
+}
+class Moo{}
+class Foo extends Moo{}

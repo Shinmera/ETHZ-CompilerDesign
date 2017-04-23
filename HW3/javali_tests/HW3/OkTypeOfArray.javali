@@ -1,0 +1,22 @@
+// Test that correct types of array throw no exception.
+class Main {
+   void main() {
+  		int[] i1;
+  		int i2;
+  		boolean b;
+  		Woo[] woo;
+  		Woo woo2;
+  		Moo moo;
+  		
+  		i2 = 3;
+  		
+  		i1 = new int[i2];
+  		i1[0] = i2;
+  		woo = new Woo[12];
+  		woo[1] = woo2;
+  		moo = (Moo) woo2;
+   }
+}
+
+class Woo {}
+class Moo extends moo; {}

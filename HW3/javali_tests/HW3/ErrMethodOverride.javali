@@ -1,0 +1,18 @@
+// Test that invalid overriding of method is detected.
+class Main {
+   void main() {
+   }
+}
+
+class Woo {
+	int method (boolean b, Moo moo, int i ){
+		return 1;
+	}
+}
+
+class Foo extends Woo{
+	int method (boolean boo, int i1){
+		return 1;
+	}
+}
+class Moo {}
