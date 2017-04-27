@@ -1,0 +1,29 @@
+/* Test access to fields from elements of arrays */
+class A {
+   int field;
+   void foo() {
+      write(1); 
+      write(field); 
+      writeln();
+   }
+}
+
+class Main {
+   A[] x;
+   void main() {
+      int i;
+      x = new A[2];
+      i = 1;
+      write(i);
+      writeln();
+
+      x[i] = new A();
+      x[i].field = i + 1;
+  
+      i = x[1].field;
+      write(i);
+      writeln();
+      
+      x[1].foo();
+   }
+}

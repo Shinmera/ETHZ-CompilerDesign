@@ -1,0 +1,14 @@
+/* Test legal downcasts */
+
+class A { }
+class B extends A { }
+
+class Main {
+   void main() {
+      A a;
+      B b;
+      a = new B();
+      b = (B) a;   /* OK at runtime */
+      write(0); 
+   }
+}

@@ -1,0 +1,14 @@
+/* Test expressions using array elements as operands */
+class Main {
+   int[] x;
+   void main() {
+      int i;
+      x = new int[3];
+      x[0] = 3; 
+      x[1] = 4; 
+      x[2] = 5;
+      i = x[0] + x[1] + x[2];
+      write(i); 
+      writeln();
+   }
+}

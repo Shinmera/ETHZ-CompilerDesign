@@ -1,0 +1,15 @@
+/* Test illegal downcasts */
+
+class A { }
+class B extends A { }
+
+class Main {   
+   void main() {
+      A a;
+      B b;
+		a = new A();
+		b = (B) a;    /* Should fail at runtime */
+		write(0);
+		writeln();
+	}
+}
