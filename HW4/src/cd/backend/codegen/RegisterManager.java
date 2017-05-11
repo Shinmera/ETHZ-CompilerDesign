@@ -99,6 +99,14 @@ public class RegisterManager {
 		return registers.remove(last);
 	}
 
+    /**
+     * Marks teh register as used.
+     */
+    public void acquireRegister(Register reg){
+        assert registers.contains(reg);
+        registers.remove(reg);
+    }
+
 	/**
 	 * marks a currently used register as free
 	 */
