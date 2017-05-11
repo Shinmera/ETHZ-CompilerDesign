@@ -89,6 +89,8 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
                 if (!dontBother.contains(s) && cg.rm.isInUse(s))
                     cg.emit.emit("pushl", s);
 
+            // FIXME check for zero division
+            
             // Move the LHS (numerator) into eax
             // Move the RHS (denominator) into ebx
             cg.emit.emit("pushl", right);
@@ -97,7 +99,6 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
             cg.emit.emit("popl", "%ebx");
             cg.emit.emitRaw("cltd"); // sign-extend %eax into %edx
             cg.emit.emit("idivl", "%ebx"); // division, result into edx:eax
-
             // Move the result into the LHS, and pop off anything we saved
             cg.emit.emit("movl", Register.EAX, left);
             for (int i = affected.length - 1; i >= 0; i--) {

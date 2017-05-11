@@ -2,7 +2,6 @@ package cd.backend.codegen;
 
 import static cd.Config.MAIN;
 import static cd.backend.codegen.AssemblyEmitter.constant;
-import static cd.backend.codegen.RegisterManager.STACK_REG;
 
 import java.util.List;
 
@@ -71,54 +70,12 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
 
     @Override
     public Register methodDecl(MethodDecl ast, ClassDecl _class) {
-        // // ------------------------------------------------------------
-        // // Homework 1 Prologue Generation:
-        // // Rather simplistic due to limited requirements!
-
-        // if (!ast.name.equals("main"))
-        //     throw new RuntimeException(
-        //                                "Only expected one method named 'main'");
-
-        // // Emit some useful string constants:
-        // cg.emit.emitRaw(Config.DATA_STR_SECTION);
-        // cg.emit.emitLabel("STR_NL");
-        // cg.emit.emitRaw(Config.DOT_STRING + " \"\\n\"");
-        // cg.emit.emitLabel("STR_D");
-        // cg.emit.emitRaw(Config.DOT_STRING + " \"%d\"");
-
-        // // Emit a label for each variable:
-        // // Let the AST Visitor do the iteration for us.
-        // cg.emit.emitRaw(Config.DATA_INT_SECTION);
-        // ast.decls().accept(new AstVisitor<Void, Void>() {
-        //         @Override
-        //         public Void varDecl(VarDecl ast, Void arg) {
-        //             if (!ast.type.equals("int"))
-        //                 throw new RuntimeException(
-        //                                            "Only int variables expected");
-        //             cg.emit.emitLabel(AstCodeGenerator.VAR_PREFIX + ast.name);
-        //             cg.emit.emitConstantData("0");
-        //             return null;
-        //         }
-        //     }, null);
-
-        // // Emit the main() method:
-        // cg.emit.emitRaw(Config.TEXT_SECTION);
-        // cg.emit.emitRaw(".globl " + MAIN);
-        // cg.emit.emitLabel(MAIN);
-
-        // cg.emit.emit("enter", "$8", "$0");
-        // cg.emit.emit("and", -16, STACK_REG);
-        // gen(ast.body());
-        // cg.emitMethodSuffix(true);
-
-        cg.emit.emitLabel(ast.name+"@"+_class.name);
+        cg.emit.emitRaw(".globl "ast.name+"@"+_class.name);
+        cg.emit.emitRaw(ast.name+"@"+_class.name);
             
         // Allocate a new stack frame
         cg.emit.emit("pushl", "%ebp");
         cg.emit.emit("movl", "%esp", "%ebp");
-
-        // Read out the arguments.
-        // FIXME
 
         // Write out the declarations.
         // FIXME
