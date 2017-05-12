@@ -2,6 +2,7 @@ package cd.backend.codegen;
 
 import static cd.Config.MAIN;
 import static cd.backend.codegen.AssemblyEmitter.constant;
+import static cd.backend.codegen.RegisterManager.STACK_REG;
 
 import java.util.List;
 
@@ -23,6 +24,7 @@ import cd.ir.Ast.VarDecl;
 import cd.ir.Ast.WhileLoop;
 import cd.ir.AstVisitor;
 import cd.ir.Symbol.MethodSymbol;
+import cd.ir.Symbol.VariableSymbol;
 import cd.util.debug.AstOneLine;
 
 /**
@@ -51,7 +53,7 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
 
     @Override
     public Register methodCall(MethodCall ast, ClassDecl dummy) {
-        Register reg = stmt.eg.methodCall(ast.getMethodCallExpr(), dummy);
+        Register reg = cg.eg.methodCall(ast.getMethodCallExpr(), null);
         cg.rm.releaseRegister(reg);
         return null;
     }
@@ -60,25 +62,36 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
         throw new RuntimeException("Not required");
     }
 
-    // Emit vtable for arrays of this class:
     @Override
     public Register classDecl(ClassDecl ast, ClassDecl arg) {
-        {
-            throw new ToDoException();
+        cg.emit.emitComment("> "+ast.name);
+        cg.emit.emitRaw(Config.DATA_INT_SECTION);
+        cg.emit.emitLabel(ast.name);
+        for(MethodDecl method : ast.methods()){
+            cg.emit.emitRaw(Config.DOT_INT+" "+method.sym.getLabel());
         }
+
+        cg.emit.emitRaw(Config.TEXT_SECTION);
+        for(MethodDecl method : ast.methods()){
+            cg.sg.gen(method);
+        }
+        return null;
     }
 
     @Override
     public Register methodDecl(MethodDecl ast, ClassDecl _class) {
-        cg.emit.emitRaw(".globl "ast.name+"@"+_class.name);
-        cg.emit.emitRaw(ast.name+"@"+_class.name);
+        cg.emit.emitComment(">> "+ast.sym.getLabel());
+        cg.emit.emitRaw(".globl "+ast.sym.getLabel());
+        cg.emit.emitLabel(ast.sym.getLabel());
             
         // Allocate a new stack frame
         cg.emit.emit("pushl", "%ebp");
         cg.emit.emit("movl", "%esp", "%ebp");
 
         // Write out the declarations.
-        // FIXME
+        for(VariableSymbol var : ast.sym.locals.values()){
+            cg.emit.emit("pushl", "$0");
+        }
             
         // Generate the actual body.
         cg.sg.gen(ast.body());
@@ -86,7 +99,7 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
         // Pop the stack frame and return. This is usually
         // already done by the return statement.
         cg.emit.emit("popl", "%ebp");
-        cg.emit.emit("ret");
+        cg.emit.emitRaw("ret");
         return null;
     }
 
@@ -177,14 +190,13 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
             cg.emit.emit("movl", "$0", "%eax");
         }else{
             Register reg = cg.eg.gen(ast.arg());
-            if(reg != Register.RegisterManager.EAX){
+            if(reg != RegisterManager.Register.EAX){
                 cg.emit.emit("movl", reg, "%eax");
                 cg.rm.releaseRegister(reg);
             }
         }
         cg.emit.emit("popl", "%ebp");
-        cg.emit.emit("ret");
+        cg.emit.emitRaw("ret");
         return null;
     }
-
 }

@@ -1,12 +1,17 @@
 package cd.backend.codegen;
 
 import java.io.Writer;
+import java.util.HashMap;
 import java.util.List;
 
 import static cd.Config.MAIN;
+
+import cd.Config;
 import cd.Main;
 import cd.backend.codegen.RegisterManager.Register;
 import cd.ir.Ast.ClassDecl;
+import cd.ir.Ast.NewObject;
+import cd.ir.Symbol.ClassSymbol;
 
 public class AstCodeGenerator {
 
@@ -14,13 +19,13 @@ public class AstCodeGenerator {
 	
     protected ExprGenerator eg;
     protected StmtGenerator sg;
+    protected HashMap<String, ClassSymbol> classes = new HashMap<String, ClassSymbol>();
 	
     protected final Main main;
 	
     protected final AssemblyEmitter emit;
     protected final RegisterManager rm = new RegisterManager();
 
-    protected final LiProgram program;
 	
     protected static final String VAR_PREFIX = "var_";
 
@@ -44,7 +49,10 @@ public class AstCodeGenerator {
     public static AstCodeGenerator createCodeGenerator(Main main, Writer out) {
         return new AstCodeGenerator(main, out);
     }
-	
+
+    public ClassSymbol getClass(String name){
+        return classes.get(name);
+    }
 	
     /**
      * Main method. Causes us to emit x86 assembly corresponding to {@code ast}
@@ -61,35 +69,41 @@ public class AstCodeGenerator {
      * </ol>
      */
     public void go(List<? extends ClassDecl> astRoots) {
-        program = new LiProgram(astRoots);
+        for(ClassDecl decl : astRoots){
+            classes.put(decl.name, decl.sym);
+            decl.sym.finalizeInheritance();
+        }
         
         // Emit some useful string constants:
-        cg.emit.emitRaw(Config.DATA_STR_SECTION);
-        cg.emit.emitLabel("STR_NL");
-        cg.emit.emitRaw(Config.DOT_STRING + " \"\\n\"");
-        cg.emit.emitLabel("STR_D");
-        cg.emit.emitRaw(Config.DOT_STRING + " \"%d\"");
+        emit.emitRaw(Config.DATA_STR_SECTION);
+        emit.emitLabel("STR_NL");
+        emit.emitRaw(Config.DOT_STRING + " \"\\n\"");
+        emit.emitLabel("STR_D");
+        emit.emitRaw(Config.DOT_STRING + " \"%d\"");
 
-        cg.emit.emitRaw(Config.TEXT_SECTION);
+        emit.emitRaw(Config.TEXT_SECTION);
         
         for (ClassDecl ast : astRoots) {
             sg.gen(ast);
         }
 
-        cg.emit.emitRaw(".globl "+MAIN);
-        cg.emit.emitLabel(MAIN);
+        emit.emitComment("> Runtime");
+        emit.emitRaw(".globl "+MAIN);
+        emit.emitLabel(MAIN);
 
-        cg.emit.emit("enter", "$8", "$0");
-        cg.emit.emit("and", -16, "%esp");
+        emit.emit("enter", "$8", "$0");
+        emit.emit("and", "$-16", "%esp");
 
         Register reg = eg.gen(new NewObject("Main"));
-        cg.emit.emit("push", reg);
+        emit.emit("push", reg);
         rm.releaseRegister(reg);
         
-        cg.emit.emit("call", "main@Main");
-        cg.emit.emit("addl", "4", "%esp");
+        emit.emit("call", "main@Main");
+        emit.emit("addl", "4", "%esp");
         
-        cg.emitMethodSuffix(true);
+        emitMethodSuffix(true);
+
+        emitExits();
     }
 
 
@@ -105,5 +119,31 @@ public class AstCodeGenerator {
             emit.emit("movl", "$0", Register.EAX);
         emit.emitRaw("leave");
         emit.emitRaw("ret");
+    }
+
+    protected void emitExits(){
+        emit.emitLabel("invalidDowncastExit@Runtime");
+        eg.cdeclCall("exit", "$1");
+        
+        emit.emitLabel("invalidArrayStoreExit@Runtime");
+        eg.cdeclCall("exit", "$2");
+        
+        emit.emitLabel("invalidArrayBoundsExit@Runtime");
+        eg.cdeclCall("exit", "$3");
+        
+        emit.emitLabel("nullPointerExit@Runtime");
+        eg.cdeclCall("exit", "$4");
+        
+        emit.emitLabel("invalidArraySizeExit@Runtime");
+        eg.cdeclCall("exit", "$5");
+        
+        emit.emitLabel("possibleInfiniteLoopExit@Runtime");
+        eg.cdeclCall("exit", "$6");
+        
+        emit.emitLabel("divisonByZeroExit@Runtime");
+        eg.cdeclCall("exit", "$7");
+        
+        emit.emitLabel("internalErrorExit@Runtime");
+        eg.cdeclCall("exit", "$22");
     }
 }

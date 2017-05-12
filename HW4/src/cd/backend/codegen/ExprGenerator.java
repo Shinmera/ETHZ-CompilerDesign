@@ -4,7 +4,9 @@ import static cd.Config.SCANF;
 import static cd.backend.codegen.AssemblyEmitter.constant;
 import static cd.backend.codegen.RegisterManager.STACK_REG;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import cd.ToDoException;
@@ -25,6 +27,7 @@ import cd.ir.Ast.ThisRef;
 import cd.ir.Ast.UnaryOp;
 import cd.ir.Ast.Var;
 import cd.ir.ExprVisitor;
+import cd.ir.Symbol.ClassSymbol;
 import cd.util.debug.AstOneLine;
 
 /**
@@ -149,13 +152,6 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     @Override
-    public Register booleanConst(BooleanConst ast, Void arg) {
-        Register reg = cg.rm.getRegister();
-        cg.emit.emit("movl", (ast.value)? "$1" : "$0", reg);
-        return reg;
-    }
-
-    @Override
     public Register builtInRead(BuiltInRead ast, Void arg) {
         {
             Register reg = cg.rm.getRegister();
@@ -171,7 +167,59 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     @Override
+    public Register booleanConst(BooleanConst ast, Void arg) {
+        Register reg = cg.rm.getRegister();
+        cg.emit.emit("movl", (ast.value)? "$1" : "$0", reg);
+        return reg;
+    }
+
+    @Override
+    public Register intConst(IntConst ast, Void arg) {
+        {
+            Register reg = cg.rm.getRegister();
+            cg.emit.emit("movl", "$" + ast.value, reg);
+            return reg;
+        }
+    }
+
+    @Override
+    public Register nullConst(NullConst ast, Void arg) {
+        Register reg = cg.rm.getRegister();
+        cg.emit.emit("movl", "$0", reg);
+        return reg;
+    }
+
+    @Override
     public Register cast(Cast ast, Void arg) {
+        String checkLabel = cg.emit.uniqueLabel();
+        String startLabel = cg.emit.uniqueLabel();
+        Register object = cg.eg.gen(ast.arg());
+        Register vtable = cg.rm.getRegister();
+        
+        cg.emit.emit("movl", object, vtable);
+        cg.emit.emitLabel(startLabel);
+
+        // Check whether it is null (no further parent / null ptr)
+        cg.emit.emit("cmpl", vtable, "$0");
+        cg.emit.emit("jne", checkLabel);
+
+        // The cast has failed as we reached a null pointer
+        cg.emit.emit("jmp", "invalidDowncastExit@Runtime");
+
+        // Dereference the next vtable
+        cg.emit.emitLabel(checkLabel);
+        cg.emit.emit("movl", "0("+vtable+")", vtable);
+
+        // Check whether it is the vtable we need
+        cg.emit.emit("cmpl", vtable, ast.typeName);
+        cg.emit.emit("jne", startLabel);
+        
+        // Success!
+        return object;
+    }
+
+    @Override
+    public Register newArray(NewArray ast, Void arg) {
         {
             throw new ToDoException();
         }
@@ -185,39 +233,25 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     @Override
-    public Register intConst(IntConst ast, Void arg) {
-        {
-            Register reg = cg.rm.getRegister();
-            cg.emit.emit("movl", "$" + ast.value, reg);
-            return reg;
-        }
+    public Register newObject(NewObject ast, Void arg) {
+        ClassSymbol symbol = cg.getClass(ast.typeName);
+        // Allocate space on the heap.
+        int size = (symbol.effectiveFields.size()+1)*4;
+        Register ptr = cdeclCall("calloc", size, "$4");
+        // Save a reference to the vtable in the object header
+        cg.emit.emit("leal", ast.typeName, "("+ptr+")");
+        return ptr;
     }
 
     @Override
     public Register field(Field ast, Void arg) {
-        {
-            throw new ToDoException();
-        }
-    }
-
-    @Override
-    public Register newArray(NewArray ast, Void arg) {
-        {
-            throw new ToDoException();
-        }
-    }
-
-    @Override
-    public Register newObject(NewObject ast, Void arg) {
-        {
-            throw new ToDoException();
-        }
-    }
-
-    @Override
-    public Register nullConst(NullConst ast, Void arg) {
-        Register reg = cg.rm.getRegister();
-        cg.emit.emit("movl", "$0", reg);
+        Register reg = cg.eg.gen(ast.arg());
+        // Check for null pointer
+        cg.emit.emit("cmp", reg, "$0");
+        cg.emit.emit("je", "nullPointerExit@Runtime");
+        // Offset is +1 for the vtable.
+        int offset = (ast.sym.getPosition()+1)*4;
+        cg.emit.emit("movl", offset+"("+reg+")", reg);
         return reg;
     }
 
@@ -230,8 +264,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         return reg;
     }
 
-    @Override
-    public Register methodCall(MethodCallExpr ast, Void arg) {
+    public Register cdeclCall(Object label, Object... args){
         // We use the cdecl x86 calling convention as it is compatible
         // with the libc routines and is widely supported, well
         // documented, and well understood. A brief description follows.
@@ -252,14 +285,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         // The callee then increases EBP again to recover the space lost
         // to the call's arguments. This completes the call, with the
         // return value still in EAX.
-        //
-        // We extend this convention for object methods by requiring the
-        // first argument (last on the stack) to be the object instance.
         Register target = RegisterManager.Register.EAX;
-
-        // Figure out where the method is located
-        // FIXME
-        Register methodLocation;
         
         // cdecl requires EAX, ECX, and EDX to be caller-saved.
         List<Register> callerSave = new ArrayList<Register>();
@@ -277,18 +303,25 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 
         // Push all the arguments in reverse
         int stackSize = 0;
-        for(Expr arg : Lists.reverse(expr.allArguments())){
-            Register reg = cg.eg.gen(arg);
-            cg.emit.emit("pushl", reg);
-            cg.rm.releaseRegister(reg);
+        // Java is annoying. Why is there not just a functional reverse?
+        List<Object> rargs = Arrays.asList(Arrays.copyOf(args, args.length));
+        Collections.reverse(rargs);
+        for(Object arg : rargs){
+            if(arg instanceof Expr){
+                Register reg = cg.eg.gen((Expr)arg);
+                cg.emit.emit("pushl", reg);
+                cg.rm.releaseRegister(reg);
+            }else{
+                cg.emit.emit("pushl", ""+arg);
+            }
             stackSize += 4;
         }
 
         // Perform the call
-        cg.emit.emit("call", methodLocation);
+        cg.emit.emit("call", label+"");
 
         // Restore stack space lost to arguments.
-        cg.emit.emit("addl", stackSize, "%esp");
+        cg.emit.emit("addl", "$"+stackSize, "%esp");
 
         // Read out the return value
         if(callerSave.contains(target)){
@@ -303,8 +336,32 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
             cg.emit.emit("popl", saved);
             cg.rm.acquireRegister(saved);
         }
-        
+
         return target;
+    }
+
+    @Override
+    public Register methodCall(MethodCallExpr ast, Void arg) {
+        // For method calls we extend the cdecl convention by requiring
+        // the first argument (last on the stack) to be the object instance.
+        Register object = cg.eg.gen(ast.receiver());
+        // Offset is +1 for the parent pointer
+        int offset = (ast.sym.getPosition()+1)*4;
+        
+        // Check for null pointer
+        cg.emit.emit("cmp", object, "$0");
+        cg.emit.emit("je", "nullPointerExit@Runtime");
+
+        // Load the vtable from the object header.
+        Register vtable = object;
+        cg.emit.emit("movl", "("+object+")", vtable);
+        
+        // Load the method location from the vtable.
+        Register methodLocation = object;
+        cg.emit.emit("movl", offset+"("+vtable+")", methodLocation);
+
+        // Perform the cdecl call.
+        return cdeclCall(methodLocation, ast.allArguments());
     }
 
     @Override
@@ -331,8 +388,10 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 	
     @Override
     public Register var(Var ast, Void arg) {
-        {
-            throw new ToDoException();
-        }
+        Register reg = cg.rm.getRegister();
+        // Offset is +2 for the ret and the esp.
+        int offset = (ast.sym.getPosition()+2)*4;
+        cg.emit.emit("movl", offset+"(%ebp)", reg);
+        return reg;
     }
 }
