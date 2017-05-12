@@ -30,7 +30,7 @@ import cd.util.debug.AstOneLine;
 /**
  * Generates code to process statements and declarations.
  */
-class StmtGenerator extends AstVisitor<Register, ClassDecl> {
+class StmtGenerator extends AstVisitor<Register, Object> {
     protected final AstCodeGenerator cg;
 
     StmtGenerator(AstCodeGenerator astCodeGenerator) {
@@ -38,11 +38,15 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
     }
 
     public void gen(Ast ast) {
-        visit(ast, null);
+        gen(ast, null);
+    }
+
+    public void gen(Ast ast, Object arg){
+        visit(ast, arg);
     }
 
     @Override
-    public Register visit(Ast ast, ClassDecl arg) {
+    public Register visit(Ast ast, Object arg) {
         try {
             cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
             return super.visit(ast, arg);
@@ -52,7 +56,7 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
     }
 
     @Override
-    public Register methodCall(MethodCall ast, ClassDecl dummy) {
+    public Register methodCall(MethodCall ast, Object dummy) {
         Register reg = cg.eg.methodCall(ast.getMethodCallExpr(), null);
         cg.rm.releaseRegister(reg);
         return null;
@@ -63,7 +67,7 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
     }
 
     @Override
-    public Register classDecl(ClassDecl ast, ClassDecl arg) {
+    public Register classDecl(ClassDecl ast, Object arg) {
         cg.emit.emitRaw(Config.DATA_INT_SECTION);
         cg.emit.emitLabel(ast.name);
         for(MethodDecl method : ast.methods()){
@@ -78,7 +82,7 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
     }
 
     @Override
-    public Register methodDecl(MethodDecl ast, ClassDecl _class) {
+    public Register methodDecl(MethodDecl ast, Object arg) {
         cg.emit.emitRaw(".globl "+ast.sym.getLabel());
         cg.emit.emitLabel(ast.sym.getLabel());
             
@@ -87,22 +91,28 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
         cg.emit.emit("movl", "%esp", "%ebp");
 
         // Write out the declarations.
+        int stackSize = 0;
         for(VariableSymbol var : ast.sym.locals.values()){
             cg.emit.emit("pushl", "$0");
+            stackSize += 4;
         }
             
         // Generate the actual body.
-        cg.sg.gen(ast.body());
-
-        // Pop the stack frame and return. This is usually
-        // already done by the return statement.
+        cg.sg.gen(ast.body(), ast.sym);
+        
+        // Generate exit label.
+        cg.emit.emitLabel(ast.sym.getLabel()+".exit");
+        
+        // Restore stack size lost to local variables
+        cg.emit.emit("addl", "$"+stackSize, "%esp");
+        
         cg.emit.emit("popl", "%ebp");
         cg.emit.emitRaw("ret");
         return null;
     }
 
     @Override
-    public Register ifElse(IfElse ast, ClassDecl arg) {
+    public Register ifElse(IfElse ast, Object arg) {
         Register reg;
         String elseLabel = cg.emit.uniqueLabel();
 
@@ -129,7 +139,7 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
     }
 
     @Override
-    public Register whileLoop(WhileLoop ast, ClassDecl arg) {
+    public Register whileLoop(WhileLoop ast, Object arg) {
         Register reg;
         String testLabel = cg.emit.uniqueLabel();
         String endLabel = cg.emit.uniqueLabel();
@@ -148,8 +158,8 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
     }
 
     @Override
-    public Register assign(Assign ast, ClassDecl arg) {
-        Register left = cg.eg.gen(ast.left());
+    public Register assign(Assign ast, Object arg) {
+        Register left = cg.eg.gen(ast.left(), true);
         Register right = cg.eg.gen(ast.right());
         cg.emit.emit("movl", right, "("+left+")");
         cg.rm.releaseRegister(right);
@@ -158,7 +168,7 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
     }
 
     @Override
-    public Register builtInWrite(BuiltInWrite ast, ClassDecl arg) {
+    public Register builtInWrite(BuiltInWrite ast, Object arg) {
         {
             Register reg = cg.eg.gen(ast.arg());
             cg.emit.emit("sub", constant(16), STACK_REG);
@@ -172,7 +182,7 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
     }
 
     @Override
-    public Register builtInWriteln(BuiltInWriteln ast, ClassDecl arg) {
+    public Register builtInWriteln(BuiltInWriteln ast, Object arg) {
         {
             cg.emit.emit("sub", constant(16), STACK_REG);
             cg.emit.emitStore("$STR_NL", 0, STACK_REG);
@@ -183,7 +193,7 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
     }
 
     @Override
-    public Register returnStmt(ReturnStmt ast, ClassDecl arg) {
+    public Register returnStmt(ReturnStmt ast, Object arg) {
         if(ast.arg() == null){
             cg.emit.emit("movl", "$0", "%eax");
         }else{
@@ -193,8 +203,7 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
                 cg.rm.releaseRegister(reg);
             }
         }
-        cg.emit.emit("popl", "%ebp");
-        cg.emit.emitRaw("ret");
+        cg.emit.emit("jmp", ((MethodSymbol)arg).getLabel()+".exit");
         return null;
     }
 }

@@ -1,0 +1,9 @@
+class Main{
+  int x;
+
+  void main(){
+    x = 4;
+    write(x);
+    writeln();
+  }
+}

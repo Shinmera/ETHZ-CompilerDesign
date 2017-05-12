@@ -219,6 +219,9 @@ public abstract class Symbol {
             for(VariableSymbol var : locals.values()){
                 var.parent = this;
             }
+            for(VariableSymbol var : parameters){
+                var.parent = this;
+            }
         }
 
         public String getLabel(){

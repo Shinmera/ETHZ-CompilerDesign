@@ -34,7 +34,7 @@ import cd.util.debug.AstOneLine;
  * Generates code to evaluate expressions. After emitting the code, returns a
  * String which indicates the register where the result can be found.
  */
-class ExprGenerator extends ExprVisitor<Register, Void> {
+class ExprGenerator extends ExprVisitor<Register, Boolean> {
     protected final AstCodeGenerator cg;
 
     ExprGenerator(AstCodeGenerator astCodeGenerator) {
@@ -42,21 +42,25 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     public Register gen(Expr ast) {
-        return visit(ast, null);
+        return gen(ast, false);
+    }
+
+    public Register gen(Expr ast, boolean address){
+        return visit(ast, address);
     }
 
     @Override
-    public Register visit(Expr ast, Void arg) {
+    public Register visit(Expr ast, Boolean arg) {
         try {
             cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
-            return super.visit(ast, null);
+            return super.visit(ast, arg);
         } finally {
             cg.emit.decreaseIndent();
         }
     }
 
     @Override
-    public Register binaryOp(BinaryOp ast, Void arg) {
+    public Register binaryOp(BinaryOp ast, Boolean arg) {
         int leftRN = cg.rnv.calc(ast.left());
         int rightRN = cg.rnv.calc(ast.right());
 
@@ -152,7 +156,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     @Override
-    public Register builtInRead(BuiltInRead ast, Void arg) {
+    public Register builtInRead(BuiltInRead ast, Boolean arg) {
         {
             Register reg = cg.rm.getRegister();
             cg.emit.emit("sub", constant(16), STACK_REG);
@@ -167,14 +171,14 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     @Override
-    public Register booleanConst(BooleanConst ast, Void arg) {
+    public Register booleanConst(BooleanConst ast, Boolean arg) {
         Register reg = cg.rm.getRegister();
         cg.emit.emit("movl", (ast.value)? "$1" : "$0", reg);
         return reg;
     }
 
     @Override
-    public Register intConst(IntConst ast, Void arg) {
+    public Register intConst(IntConst ast, Boolean arg) {
         {
             Register reg = cg.rm.getRegister();
             cg.emit.emit("movl", "$" + ast.value, reg);
@@ -183,14 +187,14 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     @Override
-    public Register nullConst(NullConst ast, Void arg) {
+    public Register nullConst(NullConst ast, Boolean arg) {
         Register reg = cg.rm.getRegister();
         cg.emit.emit("movl", "$0", reg);
         return reg;
     }
 
     @Override
-    public Register cast(Cast ast, Void arg) {
+    public Register cast(Cast ast, Boolean arg) {
         String checkLabel = cg.emit.uniqueLabel();
         String startLabel = cg.emit.uniqueLabel();
         Register object = cg.eg.gen(ast.arg());
@@ -219,21 +223,21 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     @Override
-    public Register newArray(NewArray ast, Void arg) {
+    public Register newArray(NewArray ast, Boolean arg) {
         {
             throw new ToDoException();
         }
     }
 
     @Override
-    public Register index(Index ast, Void arg) {
+    public Register index(Index ast, Boolean arg) {
         {
             throw new ToDoException();
         }
     }
 
     @Override
-    public Register newObject(NewObject ast, Void arg) {
+    public Register newObject(NewObject ast, Boolean arg) {
         ClassSymbol symbol = cg.getClass(ast.typeName);
         // Allocate space on the heap.
         int size = (symbol.effectiveFields.size()+1)*4;
@@ -247,19 +251,20 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     @Override
-    public Register field(Field ast, Void arg) {
+    public Register field(Field ast, Boolean arg) {
         Register reg = cg.eg.gen(ast.arg());
         // Check for null pointer
         cg.emit.emit("cmpl", "$0", reg);
         cg.emit.emit("je", "Runtime.nullPointerExit");
         // Offset is +1 for the vtable.
         int offset = (ast.sym.getPosition()+1)*4;
-        cg.emit.emit("movl", offset+"("+reg+")", reg);
+        
+        cg.emit.emit((arg)?"leal":"movl", offset+"("+reg+")", reg);
         return reg;
     }
 
     @Override
-    public Register thisRef(ThisRef ast, Void arg) {
+    public Register thisRef(ThisRef ast, Boolean arg) {
         Register reg = cg.rm.getRegister();
         // Current arg is always stored closest to the EBP.
         // Offset is 4 for RET + 4 for EBP.
@@ -317,7 +322,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         for(Object arg : rargs){
             if(arg instanceof Expr){
                 Register reg = cg.eg.gen((Expr)arg);
-                cg.emit.emit("pushl", (Register)arg);
+                cg.emit.emit("pushl", (Register)reg);
                 cg.rm.releaseRegister(reg);
             }else{
                 cg.emit.emit("pushl", ""+arg);
@@ -363,7 +368,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     @Override
-    public Register methodCall(MethodCallExpr ast, Void arg) {
+    public Register methodCall(MethodCallExpr ast, Boolean arg) {
         // For method calls we extend the cdecl convention by requiring
         // the first argument to be the object instance.
         Register object = cg.eg.gen(ast.receiver());
@@ -392,7 +397,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     @Override
-    public Register unaryOp(UnaryOp ast, Void arg) {
+    public Register unaryOp(UnaryOp ast, Boolean arg) {
         {
             Register argReg = gen(ast.arg());
             switch (ast.operator) {
@@ -414,11 +419,11 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 	
     @Override
-    public Register var(Var ast, Void arg) {
+    public Register var(Var ast, Boolean arg) {
         Register reg = cg.rm.getRegister();
-        // Offset is +2 for the ret and the esp.
-        int offset = (ast.sym.getPosition()+2)*4;
-        cg.emit.emit("movl", offset+"(%ebp)", reg);
+        // Offset is +3 for the ret, the ebp, and the "this".
+        int offset = (ast.sym.getPosition()+3)*4;
+        cg.emit.emit((arg)?"leal":"movl", offset+"(%ebp)", reg);
         return reg;
     }
 }
