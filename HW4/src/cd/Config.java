@@ -115,7 +115,7 @@ public class Config {
             SCANF = "_scanf";
             CALLOC = "_calloc";
             EXIT = "_exit";
-            ASM = new String[]{"gcc", "-m32", "-o", "$0", "$1"};
+            ASM = new String[]{"gcc", "-g", "-m32", "-o", "$0", "$1"};
             ASM_DIR = new File(".");
             JAVA_EXE = "java";
             DOT_STRING = ".asciz";
@@ -133,7 +133,7 @@ public class Config {
             SCANF = "scanf";
             CALLOC = "calloc";
             EXIT = "exit";
-            ASM = new String[]{"gcc", "-m32", "-o", "$0", "$1"};
+            ASM = new String[]{"gcc", "-g", "-m32", "-o", "$0", "$1"};
             ASM_DIR = new File(".");
             JAVA_EXE = "java";
             DOT_STRING = ".string";
