@@ -1,0 +1,12 @@
+class Main{
+  void main(){
+    int[] a;
+    a = new int[2];
+    a[0] = 1;
+    a[1] = 2;
+    write(a[0]);
+    writeln();
+    write(a[1]);
+    writeln();
+  }
+}

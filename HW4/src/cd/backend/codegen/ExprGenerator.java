@@ -229,16 +229,41 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
 
     @Override
     public Register newArray(NewArray ast, Boolean arg) {
-        {
-            throw new ToDoException();
-        }
+        Register size = cg.eg.gen(ast.arg());
+        // Allocate space. We need two more for the header.
+        cg.emit.emit("addl", "$2", size);
+        // FIXME: check for negative size
+        Register ptr = cdeclCall("calloc", size, "$4");
+        // Save the number of elements in the array header
+        cg.emit.emit("subl", "$2", size);
+        cg.emit.emit("movl", size, "4("+ptr+")");
+        cg.rm.releaseRegister(size);
+        // Save a reference to the Object vtable in the array header
+        Register tmp = cg.rm.getRegister();
+        cg.emit.emit("leal", "Object", tmp);
+        cg.emit.emit("movl", tmp, "0("+ptr+")");
+        cg.rm.releaseRegister(tmp);
+        return ptr;
     }
 
     @Override
     public Register index(Index ast, Boolean arg) {
-        {
-            throw new ToDoException();
-        }
+        Register reg = cg.eg.gen(ast.left());
+        // Check for null pointer
+        cg.emit.emit("cmpl", "$0", reg);
+        cg.emit.emit("je", "Runtime.nullPointerExit");
+        // Check array bounds
+        Register index = cg.eg.gen(ast.right());
+        cg.emit.emit("cmpl", "$0", index);
+        // The order of operators is reversed in GAS, so we need "less"
+        cg.emit.emit("jl", "Runtime.invalidArrayBoundsExit");
+        cg.emit.emit("cmpl", index, "4("+reg+")");
+        cg.emit.emit("jle", "Runtime.invalidArrayBoundsExit");
+
+        // Offset is +2 for array header
+        cg.emit.emit((arg)?"leal":"movl", "8("+reg+","+index+",4)", reg);
+        cg.rm.releaseRegister(index);
+        return reg;
     }
 
     @Override
@@ -247,6 +272,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         // Allocate space on the heap.
         int size = (symbol.effectiveFields.size()+1)*4;
         Register ptr = cdeclCall("calloc", "$"+size, "$4");
+        // FIXME: check for allocation failure
         // Save a reference to the vtable in the object header
         Register tmp = cg.rm.getRegister();
         cg.emit.emit("leal", ast.typeName, tmp);
@@ -261,9 +287,9 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         // Check for null pointer
         cg.emit.emit("cmpl", "$0", reg);
         cg.emit.emit("je", "Runtime.nullPointerExit");
+        
         // Offset is +1 for the vtable.
         int offset = (ast.sym.getPosition()+1)*4;
-        
         cg.emit.emit((arg)?"leal":"movl", offset+"("+reg+")", reg);
         return reg;
     }

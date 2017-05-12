@@ -1,0 +1,9 @@
+class Main(){
+  void main(){
+    int[] a;
+    a = new int[][2];
+    a[-1] = 0;
+    a[2] = 1;
+    a[3] = 2;
+  }
+}
