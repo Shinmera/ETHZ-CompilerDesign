@@ -1,0 +1,14 @@
+class Main{
+  int test(){
+    return 1;
+    return 2;
+  }
+
+  void main(){
+    write(test);
+    writeln();
+    return;
+    write(3);
+    writeln();
+  }
+}

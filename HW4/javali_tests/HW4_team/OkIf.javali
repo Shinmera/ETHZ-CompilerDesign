@@ -1,0 +1,17 @@
+class Main{
+  void main(){
+     if(true){
+       write(1);
+     }else{
+       write(0);
+     }
+     writeln();
+     
+     if(false){
+       write(0);
+     }else{
+       write(1);
+     }
+     writeln();
+  }
+}

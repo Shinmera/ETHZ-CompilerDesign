@@ -1,6 +1,7 @@
 package cd.backend.codegen;
 
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import static cd.Config.MAIN;
 import cd.Config;
 import cd.Main;
 import cd.backend.codegen.RegisterManager.Register;
+import cd.ir.Ast;
 import cd.ir.Ast.ClassDecl;
 import cd.ir.Ast.NewObject;
 import cd.ir.Symbol.ClassSymbol;
@@ -68,26 +70,33 @@ public class AstCodeGenerator {
      * method definitions.
      * </ol>
      */
-    public void go(List<? extends ClassDecl> astRoots) {
+    public void go(List<ClassDecl> astRoots) {
+        // Generate Object class.
+        ClassDecl object = new ClassDecl("Object", null, new ArrayList<Ast>());
+        object.sym = ClassSymbol.objectType;
+        astRoots.add(object);
+
+        // Finalize inheritance information.
         for(ClassDecl decl : astRoots){
             classes.put(decl.name, decl.sym);
             decl.sym.finalizeInheritance();
         }
         
-        // Emit some useful string constants:
+        // Emit some useful string constants.
         emit.emitRaw(Config.DATA_STR_SECTION);
         emit.emitLabel("STR_NL");
         emit.emitRaw(Config.DOT_STRING + " \"\\n\"");
         emit.emitLabel("STR_D");
         emit.emitRaw(Config.DOT_STRING + " \"%d\"");
 
-        emit.emitRaw(Config.TEXT_SECTION);
-        
+        // Emit all class definitions.
         for (ClassDecl ast : astRoots) {
             sg.gen(ast);
         }
 
+        // Emit runtime.
         emit.emitComment("> Runtime");
+        emit.emitRaw(Config.TEXT_SECTION);
         emit.emitRaw(".globl "+MAIN);
         emit.emitLabel(MAIN);
 

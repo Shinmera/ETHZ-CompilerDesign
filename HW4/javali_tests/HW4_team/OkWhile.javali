@@ -1,0 +1,11 @@
+class Main{
+  void main(){
+    int i;
+    i = 0;
+    while(i < 5){
+      write(i);
+      writeln();
+      i++;
+    }
+  }
+}

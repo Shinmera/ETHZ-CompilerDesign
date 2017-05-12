@@ -97,7 +97,7 @@ public class RegisterManager {
 					"Program requires too many registers");
 		
 		Register reg = registers.remove(last);
-		System.out.println("Getting "+reg);
+		//System.out.println("Getting "+reg);
 		return reg;
 	}
 
@@ -105,8 +105,10 @@ public class RegisterManager {
      * Marks teh register as used.
      */
     public void acquireRegister(Register reg){
-        assert registers.contains(reg);
-        System.out.println("Acquiring "+reg);
+        if(!registers.contains(reg)){
+            throw new RuntimeException("Cannot re-acquire "+reg);
+        }
+        //System.out.println("Acquiring "+reg);
         registers.remove(reg);
     }
 
@@ -114,8 +116,10 @@ public class RegisterManager {
 	 * marks a currently used register as free
 	 */
 	public void releaseRegister(Register reg) {
-		assert !registers.contains(reg);
-        System.out.println("Releasing "+reg);
+		if(registers.contains(reg)){
+		    throw new RuntimeException("Cannot re-free "+reg);
+		}
+        //System.out.println("Releasing "+reg);
 		registers.add(reg);
 	}
 

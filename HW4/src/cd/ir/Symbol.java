@@ -167,6 +167,9 @@ public abstract class Symbol {
                         break;
                     }
                 }
+                if(!effectiveFields.contains(field)){
+                    effectiveFields.add(field);
+                }
             }
             // Compute effective methods
             for(MethodSymbol method : methods.values()){
@@ -178,6 +181,9 @@ public abstract class Symbol {
                         effectiveMethods.set(i, method);
                         break;
                     }
+                }
+                if(!effectiveMethods.contains(method)){
+                    effectiveMethods.add(method);
                 }
             }
             

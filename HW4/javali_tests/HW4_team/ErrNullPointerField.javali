@@ -1,0 +1,10 @@
+class Main{
+  int x;
+  void main(){
+    Main y;
+    y = null;
+    x = 1;
+    write(y.x);
+    writeln();
+  }
+}

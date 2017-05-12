@@ -68,12 +68,20 @@ class StmtGenerator extends AstVisitor<Register, Object> {
 
     @Override
     public Register classDecl(ClassDecl ast, Object arg) {
+        // Emit vtable
         cg.emit.emitRaw(Config.DATA_INT_SECTION);
         cg.emit.emitLabel(ast.name);
-        for(MethodDecl method : ast.methods()){
-            cg.emit.emitRaw(Config.DOT_INT+" "+method.sym.getLabel());
+        // Header with parent pointer.
+        if(ast.sym.superClass != null){
+            cg.emit.emitRaw(Config.DOT_INT+" "+ast.sym.superClass.name);
+        }else{
+            cg.emit.emitRaw(Config.DOT_INT+" 0");
         }
-
+        // All the method pointers.
+        for(MethodSymbol method : ast.sym.effectiveMethods){
+            cg.emit.emitRaw(Config.DOT_INT+" "+method.getLabel());
+        }
+        // Emit all method bodies.
         cg.emit.emitRaw(Config.TEXT_SECTION);
         for(MethodDecl method : ast.methods()){
             cg.sg.gen(method);
@@ -118,8 +126,8 @@ class StmtGenerator extends AstVisitor<Register, Object> {
 
         reg = cg.eg.gen(ast.condition());
         // Anything greater than zero is "true"
-        cg.emit.emit("cmp", reg, "$0");
-        cg.emit.emit("jne", elseLabel);
+        cg.emit.emit("cmpl", "$0", reg);
+        cg.emit.emit("je", elseLabel);
         cg.rm.releaseRegister(reg);
         
         cg.sg.gen(ast.then());
@@ -146,7 +154,7 @@ class StmtGenerator extends AstVisitor<Register, Object> {
 
         cg.emit.emitLabel(testLabel);
         reg = cg.eg.gen(ast.condition());
-        cg.emit.emit("cmpl", reg, "$0");
+        cg.emit.emit("cmpl", "$0", reg);
         cg.emit.emit("jne", endLabel);
         cg.rm.releaseRegister(reg);
 

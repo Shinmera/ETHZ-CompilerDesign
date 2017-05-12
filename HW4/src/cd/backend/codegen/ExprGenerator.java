@@ -28,6 +28,7 @@ import cd.ir.Ast.UnaryOp;
 import cd.ir.Ast.Var;
 import cd.ir.ExprVisitor;
 import cd.ir.Symbol.ClassSymbol;
+import cd.ir.Symbol.VariableSymbol.Kind;
 import cd.util.debug.AstOneLine;
 
 /**
@@ -128,24 +129,25 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         case B_GREATER_OR_EQUAL:
             cg.emit.emit("cmpl", right, left);
             cg.emit.emit("movl", "$0", left);
+            cg.emit.emit("movl", "$1", right);
             switch(ast.operator){
             case B_EQUAL:
-                cg.emit.emit("cmove", "$1", left);
+                cg.emit.emit("cmove", right, left);
                 break;
             case B_NOT_EQUAL:
-                cg.emit.emit("cmovne", "$1", left);
+                cg.emit.emit("cmovne", right, left);
                 break;
             case B_LESS_THAN:
-                cg.emit.emit("cmovl", "$1", left);
+                cg.emit.emit("cmovl", right, left);
                 break;
             case B_LESS_OR_EQUAL:
-                cg.emit.emit("cmovle", "$1", left);
+                cg.emit.emit("cmovle", right, left);
                 break;
             case B_GREATER_THAN:
-                cg.emit.emit("cmovg", "$1", left);
+                cg.emit.emit("cmovg", right, left);
                 break;
             case B_GREATER_OR_EQUAL:
-                cg.emit.emit("cmovge", "$1", left);
+                cg.emit.emit("cmovge", right, left);
                 break;
             }
             break;
@@ -332,7 +334,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
 
         // The label is always computed as part of a call, thus we
         // can safely release it here.
-        if(label instanceof Register){
+        if(label instanceof Register && !callerSave.contains(label)){
             cg.rm.releaseRegister((Register)label);
         }
 
@@ -420,10 +422,16 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
 	
     @Override
     public Register var(Var ast, Boolean arg) {
-        Register reg = cg.rm.getRegister();
-        // Offset is +3 for the ret, the ebp, and the "this".
-        int offset = (ast.sym.getPosition()+3)*4;
-        cg.emit.emit((arg)?"leal":"movl", offset+"(%ebp)", reg);
-        return reg;
+        if(ast.sym.kind == Kind.FIELD){
+            Field field = new Field(new ThisRef(), ast.sym.name);
+            field.sym = ast.sym;
+            return cg.eg.gen(field, arg);
+        }else{
+            Register reg = cg.rm.getRegister();
+            // Offset is +3 for the ret, the ebp, and the "this".
+            int offset = (ast.sym.getPosition()+3)*4;
+            cg.emit.emit((arg)?"leal":"movl", offset+"(%ebp)", reg);
+            return reg;
+        }
     }
 }

@@ -1,0 +1,20 @@
+class A{
+  void a(){
+    write(0);
+  }
+}
+
+class B extends A{
+  void a(){
+    write(1);
+  }
+}
+
+class Main{
+  void main(){
+    B b;
+    b = new B();
+    b.a();
+    writeln();
+  }
+}

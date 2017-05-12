@@ -1,0 +1,12 @@
+class Main{
+  void test(){
+    write(1);
+    writeln();
+  }
+
+  void main(){
+    Main x;
+    x = null;
+    x.test();
+  }
+}
