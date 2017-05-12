@@ -1,0 +1,6 @@
+/bin/
+javali_tests/*/*.err
+javali_tests/*/*.ref
+javali_tests/*/*.s
+javali_tests/*/*.bin
+javali_tests/*/*.o
