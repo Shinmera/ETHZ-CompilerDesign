@@ -201,6 +201,9 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         String startLabel = cg.emit.uniqueLabel();
         Register object = cg.eg.gen(ast.arg());
         Register vtable = cg.rm.getRegister();
+        Register expected = cg.rm.getRegister();
+        
+        cg.emit.emit("leal", ast.typeName, expected);
         
         cg.emit.emit("movl", object, vtable);
         cg.emit.emitLabel(startLabel);
@@ -217,7 +220,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         cg.emit.emit("movl", "0("+vtable+")", vtable);
 
         // Check whether it is the vtable we need
-        cg.emit.emit("cmpl", ast.typeName, vtable);
+        cg.emit.emit("cmpl", expected, vtable);
         cg.emit.emit("jne", startLabel);
         
         // Success!
