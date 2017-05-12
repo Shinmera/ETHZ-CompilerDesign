@@ -1,0 +1,10 @@
+class Main{
+  int number(){
+    return 4;
+  }
+
+  void main(){
+    write(number());
+    writeln();
+  }
+}

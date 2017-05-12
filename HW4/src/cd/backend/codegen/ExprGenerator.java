@@ -200,7 +200,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         cg.emit.emitLabel(startLabel);
 
         // Check whether it is null (no further parent / null ptr)
-        cg.emit.emit("cmpl", vtable, "$0");
+        cg.emit.emit("cmpl", "$0", vtable);
         cg.emit.emit("jne", checkLabel);
 
         // The cast has failed as we reached a null pointer
@@ -211,7 +211,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         cg.emit.emit("movl", "0("+vtable+")", vtable);
 
         // Check whether it is the vtable we need
-        cg.emit.emit("cmpl", vtable, ast.typeName);
+        cg.emit.emit("cmpl", ast.typeName, vtable);
         cg.emit.emit("jne", startLabel);
         
         // Success!
@@ -250,7 +250,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     public Register field(Field ast, Void arg) {
         Register reg = cg.eg.gen(ast.arg());
         // Check for null pointer
-        cg.emit.emit("cmp", reg, "$0");
+        cg.emit.emit("cmpl", "$0", reg);
         cg.emit.emit("je", "Runtime.nullPointerExit");
         // Offset is +1 for the vtable.
         int offset = (ast.sym.getPosition()+1)*4;
@@ -268,7 +268,6 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     public Register cdeclCall(Object label, Object... args){
-        System.out.println("CDECL "+label);
         // We use the cdecl x86 calling convention as it is compatible
         // with the libc routines and is widely supported, well
         // documented, and well understood. A brief description follows.
@@ -306,14 +305,19 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         }
 
         // Push all the arguments in reverse
-        int stackSize = 0;
-        // Java is annoying. Why is there not just a functional reverse?
-        List<Object> rargs = Arrays.asList(Arrays.copyOf(args, args.length));
+        List<Object> rargs = new ArrayList<Object>();
+        if(args.length == 1 && args[0] instanceof List){
+            rargs.addAll((List)args[0]);
+        }else{
+            rargs.addAll(Arrays.asList(args));
+        }
         Collections.reverse(rargs);
+
+        int stackSize = 0;
         for(Object arg : rargs){
             if(arg instanceof Expr){
                 Register reg = cg.eg.gen((Expr)arg);
-                cg.emit.emit("pushl", reg);
+                cg.emit.emit("pushl", (Register)arg);
                 cg.rm.releaseRegister(reg);
             }else{
                 cg.emit.emit("pushl", ""+arg);
@@ -321,8 +325,18 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
             stackSize += 4;
         }
 
+        // The label is always computed as part of a call, thus we
+        // can safely release it here.
+        if(label instanceof Register){
+            cg.rm.releaseRegister((Register)label);
+        }
+
         // Perform the call
-        cg.emit.emit("call", label+"");
+        if(label instanceof Register){
+            cg.emit.emit("call", "*"+label);
+        }else{
+            cg.emit.emit("call", ""+label);
+        }
 
         // Restore stack space lost to arguments.
         cg.emit.emit("addl", "$"+stackSize, "%esp");
@@ -351,25 +365,30 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     @Override
     public Register methodCall(MethodCallExpr ast, Void arg) {
         // For method calls we extend the cdecl convention by requiring
-        // the first argument (last on the stack) to be the object instance.
+        // the first argument to be the object instance.
         Register object = cg.eg.gen(ast.receiver());
         // Offset is +1 for the parent pointer
         int offset = (ast.sym.getPosition()+1)*4;
         
         // Check for null pointer
-        cg.emit.emit("cmp", object, "$0");
+        cg.emit.emit("cmpl", "$0", object);
         cg.emit.emit("je", "Runtime.nullPointerExit");
 
         // Load the vtable from the object header.
-        Register vtable = object;
+        Register vtable = cg.rm.getRegister();
         cg.emit.emit("movl", "("+object+")", vtable);
         
         // Load the method location from the vtable.
-        Register methodLocation = object;
+        Register methodLocation = vtable;
         cg.emit.emit("movl", offset+"("+vtable+")", methodLocation);
 
         // Perform the cdecl call.
-        return cdeclCall(methodLocation, ast.allArguments());
+        List<Object> args = new ArrayList<Object>();
+        args.add(object);
+        args.addAll(ast.argumentsWithoutReceiver());
+        Register result = cdeclCall(methodLocation, args);
+        cg.rm.releaseRegister(object);
+        return result;
     }
 
     @Override

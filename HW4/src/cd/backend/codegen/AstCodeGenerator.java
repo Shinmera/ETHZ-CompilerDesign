@@ -95,7 +95,7 @@ public class AstCodeGenerator {
         emit.emit("and", "$-16", "%esp");
 
         Register reg = eg.gen(new NewObject("Main"));
-        eg.cdeclCall("Main.main", reg);;
+        eg.cdeclCall("Main.main", reg);
         
         emitMethodSuffix(true);
 
