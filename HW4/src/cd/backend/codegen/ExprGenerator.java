@@ -305,10 +305,10 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
             callerSave.add(RegisterManager.Register.ECX);
         if(cg.rm.isInUse(RegisterManager.Register.EDX))
             callerSave.add(RegisterManager.Register.EDX);
-        
+
+        // Push saved onto satck first
         for(Register saved : callerSave){
             cg.emit.emit("pushl", saved);
-            cg.rm.releaseRegister(saved);
         }
 
         // Push all the arguments in reverse
@@ -332,6 +332,12 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
             stackSize += 4;
         }
 
+        // Now that we're done computing things, free the caller-
+        // saved registers.
+        for(Register saved : callerSave){
+            cg.rm.releaseRegister(saved);
+        }
+
         // The label is always computed as part of a call, thus we
         // can safely release it here.
         if(label instanceof Register && !callerSave.contains(label)){
@@ -353,7 +359,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
             cg.rm.acquireRegister(saved);
         }
 
-        // Read out the return value
+        // Read out the return value.
         if(callerSave.contains(target)){
             target = cg.rm.getRegister();
             cg.emit.emit("movl", "%eax", target);
