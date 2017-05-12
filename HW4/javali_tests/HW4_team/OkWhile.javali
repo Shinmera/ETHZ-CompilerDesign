@@ -5,7 +5,7 @@ class Main{
     while(i < 5){
       write(i);
       writeln();
-      i++;
+      i = i + 1;
     }
   }
 }

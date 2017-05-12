@@ -155,7 +155,7 @@ class StmtGenerator extends AstVisitor<Register, Object> {
         cg.emit.emitLabel(testLabel);
         reg = cg.eg.gen(ast.condition());
         cg.emit.emit("cmpl", "$0", reg);
-        cg.emit.emit("jne", endLabel);
+        cg.emit.emit("je", endLabel);
         cg.rm.releaseRegister(reg);
 
         cg.sg.gen(ast.body());
