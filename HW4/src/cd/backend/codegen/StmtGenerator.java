@@ -64,7 +64,6 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
 
     @Override
     public Register classDecl(ClassDecl ast, ClassDecl arg) {
-        cg.emit.emitComment("> "+ast.name);
         cg.emit.emitRaw(Config.DATA_INT_SECTION);
         cg.emit.emitLabel(ast.name);
         for(MethodDecl method : ast.methods()){
@@ -80,7 +79,6 @@ class StmtGenerator extends AstVisitor<Register, ClassDecl> {
 
     @Override
     public Register methodDecl(MethodDecl ast, ClassDecl _class) {
-        cg.emit.emitComment(">> "+ast.sym.getLabel());
         cg.emit.emitRaw(".globl "+ast.sym.getLabel());
         cg.emit.emitLabel(ast.sym.getLabel());
             

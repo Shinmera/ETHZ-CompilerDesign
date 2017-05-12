@@ -95,11 +95,7 @@ public class AstCodeGenerator {
         emit.emit("and", "$-16", "%esp");
 
         Register reg = eg.gen(new NewObject("Main"));
-        emit.emit("push", reg);
-        rm.releaseRegister(reg);
-        
-        emit.emit("call", "main@Main");
-        emit.emit("addl", "4", "%esp");
+        eg.cdeclCall("Main.main", reg);;
         
         emitMethodSuffix(true);
 
@@ -122,28 +118,28 @@ public class AstCodeGenerator {
     }
 
     protected void emitExits(){
-        emit.emitLabel("invalidDowncastExit@Runtime");
-        eg.cdeclCall("exit", "$1");
+        emit.emitLabel("Runtime.invalidDowncastExit");
+        rm.releaseRegister(eg.cdeclCall("exit", "$1"));
         
-        emit.emitLabel("invalidArrayStoreExit@Runtime");
-        eg.cdeclCall("exit", "$2");
+        emit.emitLabel("Runtime.invalidArrayStoreExit");
+        rm.releaseRegister(eg.cdeclCall("exit", "$2"));
         
-        emit.emitLabel("invalidArrayBoundsExit@Runtime");
-        eg.cdeclCall("exit", "$3");
+        emit.emitLabel("Runtime.invalidArrayBoundsExit");
+        rm.releaseRegister(eg.cdeclCall("exit", "$3"));
         
-        emit.emitLabel("nullPointerExit@Runtime");
-        eg.cdeclCall("exit", "$4");
+        emit.emitLabel("Runtime.nullPointerExit");
+        rm.releaseRegister(eg.cdeclCall("exit", "$4"));
         
-        emit.emitLabel("invalidArraySizeExit@Runtime");
-        eg.cdeclCall("exit", "$5");
+        emit.emitLabel("Runtime.invalidArraySizeExit");
+        rm.releaseRegister(eg.cdeclCall("exit", "$5"));
         
-        emit.emitLabel("possibleInfiniteLoopExit@Runtime");
-        eg.cdeclCall("exit", "$6");
+        emit.emitLabel("Runtime.possibleInfiniteLoopExit");
+        rm.releaseRegister(eg.cdeclCall("exit", "$6"));
         
-        emit.emitLabel("divisonByZeroExit@Runtime");
-        eg.cdeclCall("exit", "$7");
+        emit.emitLabel("Runtime.divisonByZeroExit");
+        rm.releaseRegister(eg.cdeclCall("exit", "$7"));
         
-        emit.emitLabel("internalErrorExit@Runtime");
-        eg.cdeclCall("exit", "$22");
+        emit.emitLabel("Runtime.internalErrorExit");
+        rm.releaseRegister(eg.cdeclCall("exit", "$22"));
     }
 }

@@ -222,7 +222,7 @@ public abstract class Symbol {
         }
 
         public String getLabel(){
-            return name+"@"+parent.name;
+            return parent.name+"."+name;
         }
     }
 	

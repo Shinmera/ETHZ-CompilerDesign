@@ -204,7 +204,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         cg.emit.emit("jne", checkLabel);
 
         // The cast has failed as we reached a null pointer
-        cg.emit.emit("jmp", "invalidDowncastExit@Runtime");
+        cg.emit.emit("jmp", "Runtime.invalidDowncastExit");
 
         // Dereference the next vtable
         cg.emit.emitLabel(checkLabel);
@@ -237,9 +237,12 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         ClassSymbol symbol = cg.getClass(ast.typeName);
         // Allocate space on the heap.
         int size = (symbol.effectiveFields.size()+1)*4;
-        Register ptr = cdeclCall("calloc", size, "$4");
+        Register ptr = cdeclCall("calloc", "$"+size, "$4");
         // Save a reference to the vtable in the object header
-        cg.emit.emit("leal", ast.typeName, "("+ptr+")");
+        Register tmp = cg.rm.getRegister();
+        cg.emit.emit("leal", ast.typeName, tmp);
+        cg.emit.emit("movl", tmp, "0("+ptr+")");
+        cg.rm.releaseRegister(tmp);
         return ptr;
     }
 
@@ -248,7 +251,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         Register reg = cg.eg.gen(ast.arg());
         // Check for null pointer
         cg.emit.emit("cmp", reg, "$0");
-        cg.emit.emit("je", "nullPointerExit@Runtime");
+        cg.emit.emit("je", "Runtime.nullPointerExit");
         // Offset is +1 for the vtable.
         int offset = (ast.sym.getPosition()+1)*4;
         cg.emit.emit("movl", offset+"("+reg+")", reg);
@@ -265,6 +268,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
     }
 
     public Register cdeclCall(Object label, Object... args){
+        System.out.println("CDECL "+label);
         // We use the cdecl x86 calling convention as it is compatible
         // with the libc routines and is widely supported, well
         // documented, and well understood. A brief description follows.
@@ -322,6 +326,11 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 
         // Restore stack space lost to arguments.
         cg.emit.emit("addl", "$"+stackSize, "%esp");
+        
+        // Re-acquire saved registers.
+        for(Register saved : callerSave){
+            cg.rm.acquireRegister(saved);
+        }
 
         // Read out the return value
         if(callerSave.contains(target)){
@@ -334,7 +343,6 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         // Restore saved EAX, ECX, and EDX.
         for(Register saved : callerSave){
             cg.emit.emit("popl", saved);
-            cg.rm.acquireRegister(saved);
         }
 
         return target;
@@ -350,7 +358,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         
         // Check for null pointer
         cg.emit.emit("cmp", object, "$0");
-        cg.emit.emit("je", "nullPointerExit@Runtime");
+        cg.emit.emit("je", "Runtime.nullPointerExit");
 
         // Load the vtable from the object header.
         Register vtable = object;
