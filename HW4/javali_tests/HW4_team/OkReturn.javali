@@ -5,7 +5,7 @@ class Main{
   }
 
   void main(){
-    write(test);
+    write(test());
     writeln();
     return;
     write(3);

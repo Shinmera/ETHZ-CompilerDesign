@@ -87,6 +87,10 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
             cg.emit.emit("subl", right, left);
             break;
         case B_DIV:
+            // Check for zero division.
+            cg.emit.emit("cmpl", "$0", right);
+            cg.emit.emit("je", "Runtime.divisonByZeroExit");
+            
             // Save EAX, EBX, and EDX to the stack if they are not used
             // in this subtree (but are used elsewhere). We will be
             // changing them.
@@ -96,8 +100,6 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
             for (Register s : affected)
                 if (!dontBother.contains(s) && cg.rm.isInUse(s))
                     cg.emit.emit("pushl", s);
-
-            // FIXME check for zero division
             
             // Move the LHS (numerator) into eax
             // Move the RHS (denominator) into ebx

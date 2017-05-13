@@ -1,0 +1,32 @@
+class Main{
+  void main(){
+    int v0;
+    int v1;
+    int v2;
+    int v3;
+    int v4;
+    int v5;
+    int v6;
+    int v7;
+    int v8;
+    int v9;
+    int v10;
+    int v11;
+    int v12;
+    v1 = 1;
+    v2 = 2;
+    v3 = 3;
+    v4 = 4;
+    v5 = 5;
+    v6 = 6;
+    v7 = 7;
+    v8 = 8;
+    v9 = 9;
+    v10 = 10;
+    v11 = 11;
+    v12 = 12;
+    v0 = v1+v2+v3+v4+v5+v6+v7+v8+v9+v10+v11+v12;
+    write(v0);
+    writeln();
+  }
+}

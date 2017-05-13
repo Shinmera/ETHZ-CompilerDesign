@@ -1,0 +1,25 @@
+class Main{
+  int x;
+
+  void foo(int a, int b){
+    write(a);
+    writeln();
+    write(b);
+    writeln();
+  }
+
+  int bar(){
+    x = x + 1;
+    return x;
+  }
+
+  int baz(){
+    x = x * 2;
+    return x;
+  }
+
+  void main(){
+    x = 1;
+    foo(bar(), baz());
+  }
+}
