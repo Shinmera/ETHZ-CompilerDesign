@@ -97,12 +97,17 @@ class StmtGenerator extends AstVisitor<Register, Object> {
         // Allocate a new stack frame
         cg.emit.emit("pushl", "%ebp");
         cg.emit.emit("movl", "%esp", "%ebp");
-
+        
         // Write out the declarations.
         int stackSize = 0;
         for(VariableSymbol var : ast.sym.locals.values()){
             cg.emit.emit("pushl", "$0");
             stackSize += 4;
+        }
+
+        // Conservatively push callee-saved registers.
+        for(Register save : cg.rm.CALLEE_SAVE){
+            cg.emit.emit("pushl", save);
         }
             
         // Generate the actual body.
@@ -110,6 +115,11 @@ class StmtGenerator extends AstVisitor<Register, Object> {
         
         // Generate exit label.
         cg.emit.emitLabel(ast.sym.getLabel()+".exit");
+
+        // Pop callee-saved registers.
+        for(Register save : cg.rm.CALLEE_SAVE){
+            cg.emit.emit("popl", save);
+        }
         
         // Restore stack size lost to local variables
         cg.emit.emit("addl", "$"+stackSize, "%esp");
