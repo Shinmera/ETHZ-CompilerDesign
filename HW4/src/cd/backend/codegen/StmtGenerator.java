@@ -106,6 +106,11 @@ class StmtGenerator extends AstVisitor<Register, Object> {
         }
 
         // Conservatively push callee-saved registers.
+        // This could be improved by only saving the register
+        // once it is actually being used. This would require
+        // tracking which registers have already been "touched"
+        // within a method declaration and the point at which
+        // they are released for the last time.
         for(Register save : cg.rm.CALLEE_SAVE){
             cg.emit.emit("pushl", save);
         }
