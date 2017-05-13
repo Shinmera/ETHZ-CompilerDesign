@@ -330,37 +330,34 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         
         // cdecl requires EAX, ECX, and EDX to be caller-saved.
         List<Register> callerSave = new ArrayList<Register>();
-        if(cg.rm.isInUse(RegisterManager.Register.EAX))
-            callerSave.add(RegisterManager.Register.EAX);
-        if(cg.rm.isInUse(RegisterManager.Register.ECX))
-            callerSave.add(RegisterManager.Register.ECX);
-        if(cg.rm.isInUse(RegisterManager.Register.EDX))
-            callerSave.add(RegisterManager.Register.EDX);
-
-        // Push saved onto satck first
+        for(Register save : cg.rm.CALLER_SAVE){
+            if(cg.rm.isInUse(save)) callerSave.add(save);
+        }
+        
+        // Push saved onto satck first.
         for(Register saved : callerSave){
             cg.emit.emit("pushl", saved);
         }
 
-        // Push all the arguments in reverse
+        // Read out the arguments (varargs mangling).
         List<Object> rargs = new ArrayList<Object>();
         if(args.length == 1 && args[0] instanceof List){
             rargs.addAll((List)args[0]);
         }else{
             rargs.addAll(Arrays.asList(args));
         }
-        Collections.reverse(rargs);
-
-        int stackSize = 0;
-        for(Object arg : rargs){
+        
+        // Push them onto the stack in reverse.
+        cg.emit.emit("subl", "$"+rargs.size()*4, "%esp");
+        for(int i=0; i<rargs.size(); i++){
+            Object arg = rargs.get(i);
             if(arg instanceof Expr){
                 Register reg = cg.eg.gen((Expr)arg);
-                cg.emit.emit("pushl", (Register)reg);
+                cg.emit.emit("movl", (Register)reg, i*4+"(%esp)");
                 cg.rm.releaseRegister(reg);
             }else{
-                cg.emit.emit("pushl", ""+arg);
+                cg.emit.emit("movl", ""+arg, i*4+"(%esp)");
             }
-            stackSize += 4;
         }
 
         // Now that we're done computing things, free the caller-
@@ -383,7 +380,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         }
 
         // Restore stack space lost to arguments.
-        cg.emit.emit("addl", "$"+stackSize, "%esp");
+        cg.emit.emit("addl", "$"+rargs.size()*4, "%esp");
         
         // Re-acquire saved registers.
         for(Register saved : callerSave){
