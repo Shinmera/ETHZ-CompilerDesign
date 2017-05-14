@@ -1,0 +1,8 @@
+// Check for array bounds.
+class Main(){
+  void main(){
+    int[] a;
+    a = new int[2];
+    a[5] = 0;
+  }
+}

@@ -1,0 +1,10 @@
+/* Test legal downcast from Object to array */
+
+class Main {
+   void main() {
+      Object obj;
+int[] a;      
+a = (Array) obj;
+
+   }
+}

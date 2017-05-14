@@ -1,0 +1,16 @@
+class Main{
+
+  Klass klass(){
+  	Klass k;
+  	k = new Klass();
+    return k;
+  }
+
+  void main(){
+  	Klass kl;
+    kl = klass();
+  }
+}
+
+class Klass {
+}

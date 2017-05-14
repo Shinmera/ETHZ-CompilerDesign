@@ -69,6 +69,7 @@ class StmtGenerator extends AstVisitor<Register, Object> {
     @Override
     public Register classDecl(ClassDecl ast, Object arg) {
         // Emit vtable
+    	cg.emit.emitComment("Emitting vtable");
         cg.emit.emitRaw(Config.DATA_INT_SECTION);
         cg.emit.emitLabel(ast.name);
         // Header with parent pointer.

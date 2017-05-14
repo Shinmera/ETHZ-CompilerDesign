@@ -1,0 +1,24 @@
+// Test field access.
+class Main{
+  int x;
+
+  void main(){
+  	Moo moo;
+  	moo = new Moo();
+    x = moo.boo();
+    write(x);
+    writeln();
+    
+    moo.a = 3;
+    write(moo.a);
+    writeln();
+  }
+}
+class Moo {
+int a;
+int boo(){
+  int y;
+  y = 1;
+  return y;
+ }
+}
