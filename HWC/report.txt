@@ -1,0 +1,9 @@
+## Report for the Discussion on Teama
+- Structure is clear and quite readable. The visitor pattern is used nicely and this helps the comprehension.
+- Some of the parts are hacky because of a lack of time and a rush to the deadline.
+- The TraverseInfo class seems to be superfluous and could have been left out.
+- The code has a few bugs, such as the binary operators, which don't check the types properly.
+- The code performed quite well overall despite the circumstances.
+- No check for the return type conformance is done upon method overriding.
+- There are detailed error messages, which is nice.
+- Not a single comment, which is making it hard to read and understand.
