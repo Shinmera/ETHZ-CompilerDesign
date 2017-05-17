@@ -396,6 +396,8 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         }
 
         // Restore saved EAX, ECX, and EDX.
+        // Important: pop them back in reverse order!
+        Collections.reverse(callerSave);
         for(Register saved : callerSave){
             cg.emit.emit("popl", saved);
         }
