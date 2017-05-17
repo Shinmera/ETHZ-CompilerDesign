@@ -1,0 +1,25 @@
+// Ensure variables are distinct and not clobbered or confused somehow.
+class Main{
+    void main(){
+        int v1;
+        int v2;
+
+        v1 = 1;
+        if(v1 == 1){
+            write(1);
+            writeln();
+        }
+
+        v2 = 2;
+        if(v2 == 2){
+            write(2);
+            writeln();
+        }
+
+        v1 = 3;
+        if(v2 == 2){
+            write(3);
+            writeln();
+        }
+    }
+}
