@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public abstract class Symbol {
 	
@@ -195,7 +196,7 @@ public abstract class Symbol {
 		
         public final Ast.MethodDecl ast;
         public final Map<String, VariableSymbol> locals =
-            new HashMap<String, VariableSymbol>();
+            new TreeMap<String, VariableSymbol>();
         public final List<VariableSymbol> parameters =
             new ArrayList<VariableSymbol>();
 		
