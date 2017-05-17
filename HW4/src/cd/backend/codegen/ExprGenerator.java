@@ -300,7 +300,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
     public Register thisRef(ThisRef ast, Boolean arg) {
         Register reg = cg.rm.getRegister();
         // Current arg is always stored closest to the EBP.
-        // Offset is 4 for RET + 4 for EBP.
+        // Offset is 4 for RET + 4 to read downwards.
         cg.emit.emit("movl", "8(%ebp)", reg);
         return reg;
     }
@@ -456,16 +456,26 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
 	
     @Override
     public Register var(Var ast, Boolean arg) {
-        if(ast.sym.kind == Kind.FIELD){
+        switch(ast.sym.kind){
+        case FIELD:{
             Field field = new Field(new ThisRef(), ast.sym.name);
             field.sym = ast.sym;
-            return cg.eg.gen(field, arg);
-        }else{
+            return cg.eg.gen(field, arg);}
+        case PARAM:{
             Register reg = cg.rm.getRegister();
-            // Offset is +3 for the ret, the ebp, and the "this".
+            // Offset is +3 for the ret, "this", and to read "downwards".
             int offset = (ast.sym.getPosition()+3)*4;
             cg.emit.emit((arg)?"leal":"movl", offset+"(%ebp)", reg);
-            return reg;
+            return reg;}
+        case LOCAL:{
+            Register reg = cg.rm.getRegister();
+            // Offset is +1 for the the ebp.
+            int offset = (ast.sym.getPosition()+1)*4;
+            // Offset is negative because variables grow "downwards"
+            cg.emit.emit((arg)?"leal":"movl", (-offset)+"(%ebp)", reg);
+            return reg;}
+        default:
+            throw new RuntimeException("Encountered varaible of unknown kind.");
         }
     }
 }

@@ -269,16 +269,17 @@ public abstract class Symbol {
                 }
                 return -1;}
                 
-            case PARAM:
+            case PARAM:{
+                MethodSymbol symbol = (MethodSymbol)parent;
+                for(int i=0; i<symbol.parameters.size(); i++){
+                    if(symbol.parameters.get(i) == this){
+                        return i;
+                    }
+                }
+                return -1;}
             case LOCAL:{
                 MethodSymbol symbol = (MethodSymbol)parent;
                 int i=0;
-                for(VariableSymbol var : symbol.parameters){
-                    if(var == this){
-                        return i;
-                    }
-                    i++;
-                }
                 for(VariableSymbol var : symbol.locals.values()){
                     if(var == this){
                         return i;
