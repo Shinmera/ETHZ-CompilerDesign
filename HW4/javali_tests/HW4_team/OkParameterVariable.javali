@@ -1,10 +1,11 @@
 class Main{
-  void foo(int x){
+  void foo(int x, int y){
     write(x);
+    write(y);
     writeln();
   }
 
   void main(){
-    foo(4);
+    foo(4, 57005);
   }
 }
