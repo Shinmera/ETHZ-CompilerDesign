@@ -1,4 +1,4 @@
-// Instance a of A has not been initialized.
+// Instance a of A has not been initialized in method a of class B.
 class A{
 	int b(){
     return 1;

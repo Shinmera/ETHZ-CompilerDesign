@@ -1,3 +1,4 @@
+// Checks if error is thrown on method call on a null pointer.
 class Main{
   void test(){
     write(1);

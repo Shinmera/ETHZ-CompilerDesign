@@ -1,3 +1,4 @@
+// Check comparison operations.
 class Main{
    void main(){
      if(1 == 1){

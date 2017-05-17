@@ -1,4 +1,6 @@
+// Check for correct call of method that returns a reference type.
 class Main{
+  int a;
 
   Klass klass(){
   	Klass k;
@@ -9,8 +11,10 @@ class Main{
   void main(){
   	Klass kl;
     kl = klass();
+    a = kl.k;
   }
 }
 
 class Klass {
+  int k;
 }

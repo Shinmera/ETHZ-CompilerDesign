@@ -1,5 +1,5 @@
 // Array access on null pointer.
-class Main(){
+class Main{
   void main(){
     int[] a;
     int b;

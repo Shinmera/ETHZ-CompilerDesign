@@ -1,4 +1,4 @@
-// Test method call that return reference type and the access the field of the returned object.
+// Test method call that return reference type and the access the field of the returned downcasted object.
 class Main{
   Woo woo;
   void main(){

@@ -1,3 +1,4 @@
+// Test negative array index access.
 class Main{
   void main(){
     int[] a;

@@ -1,0 +1,31 @@
+// Test correct usage of array of objects.
+class Main{
+  void main(){
+    A[] arr;
+    A a;
+    B b;
+    int i;
+    
+    a = new A();
+    b = new B();
+    arr = new A[3];
+    arr[0] = a;
+    arr[1] = (A)b;
+    arr[2] = new A();
+    
+    a = arr[0];
+    i = a.c();
+    a = arr[1];
+    i = a.c();
+    a = arr[2];
+    i = a.c();
+  }
+}
+
+class A{
+int c() {
+  return 1;
+}
+}
+class B extends A{
+}

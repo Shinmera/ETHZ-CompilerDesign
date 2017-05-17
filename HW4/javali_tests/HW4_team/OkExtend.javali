@@ -1,3 +1,4 @@
+// Check overriden and inherited method calls of extended classes.
 class A{
   void a(){
     write(0);

@@ -1,8 +1,11 @@
 // Test method call.
 class Main{
   Moo moo;
+  int a;
+  
   void main(){
   moo = new Moo();
+  	a = moo.number();
     write(moo.number());
     writeln();
   }

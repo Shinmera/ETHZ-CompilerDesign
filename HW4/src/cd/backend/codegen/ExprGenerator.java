@@ -109,6 +109,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
             cg.emit.emit("popl", "%ebx");
             cg.emit.emitRaw("cltd"); // sign-extend %eax into %edx
             cg.emit.emit("idivl", "%ebx"); // division, result into edx:eax
+            
             // Move the result into the LHS, and pop off anything we saved
             cg.emit.emit("movl", Register.EAX, left);
             for (int i = affected.length - 1; i >= 0; i--) {
@@ -166,6 +167,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
             cg.emit.emit("sub", constant(16), STACK_REG);
             cg.emit.emit("leal", AssemblyEmitter.registerOffset(8, STACK_REG), reg);
             cg.emit.emitStore(reg, 4, STACK_REG);
+            // Push format.
             cg.emit.emitStore("$STR_D", 0, STACK_REG);
             cg.emit.emit("call", SCANF);
             cg.emit.emitLoad(8, STACK_REG, reg);
@@ -197,21 +199,35 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         return reg;
     }
 
+    /*
+     * Checks if the type to cast to (expected) is a supertype of the expression (object)
+     * by looping through the vtables of the superclasses.
+     * 
+     * (non-Javadoc)
+     * @see cd.ir.ExprVisitor#cast(cd.ir.Ast.Cast, java.lang.Object)
+     */
     @Override
     public Register cast(Cast ast, Boolean arg) {
         String checkLabel = cg.emit.uniqueLabel();
         String startLabel = cg.emit.uniqueLabel();
+        // The expression to cast.
         Register object = cg.eg.gen(ast.arg());
         Register vtable = cg.rm.getRegister();
+        // The type the variable is cast to.
         Register expected = cg.rm.getRegister();
         
+        // typeName is the type the variable is cast to.
         cg.emit.emit("leal", ast.typeName, expected);
         
+        /*
+         * Loop through the vtables to find parent class.
+         */
         cg.emit.emit("movl", object, vtable);
         cg.emit.emitLabel(startLabel);
 
         // Check whether it is null (no further parent / null ptr)
         cg.emit.emit("cmpl", "$0", vtable);
+        // Go to checkLabel if not null.
         cg.emit.emit("jne", checkLabel);
 
         // The cast has failed as we reached a null pointer
@@ -232,10 +248,24 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
     @Override
     public Register newArray(NewArray ast, Boolean arg) {
         Register size = cg.eg.gen(ast.arg());
-        // Allocate space. We need two more for the header.
-        cg.emit.emit("addl", "$2", size);
-        // FIXME: check for negative size
+        String checkLabel = cg.emit.uniqueLabel();
+        
+        // Check for negative size.
+        cg.emit.emit("testl", size, size);
+        cg.emit.emit("jns", checkLabel);
+        
+        // Array of negative size.
+        cg.emit.emit("jmp", "Runtime.invalidArraySizeExit");
+       
+        // Jump here if size not negative.
+        cg.emit.emitLabel(checkLabel);
+        
+        // Allocate space for the header.
+        cg.emit.emit("addl", "$2", size);  
+        
+        // Allocate space for the array.
         Register ptr = cdeclCall("calloc", size, "$4");
+        
         // Save the number of elements in the array header
         cg.emit.emit("subl", "$2", size);
         cg.emit.emit("movl", size, "4("+ptr+")");
@@ -271,10 +301,11 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
     @Override
     public Register newObject(NewObject ast, Boolean arg) {
         ClassSymbol symbol = cg.getClass(ast.typeName);
+        
         // Allocate space on the heap.
         int size = (symbol.effectiveFields.size()+1)*4;
         Register ptr = cdeclCall("calloc", "$"+size, "$4");
-        // FIXME: check for allocation failure
+
         // Save a reference to the vtable in the object header
         Register tmp = cg.rm.getRegister();
         cg.emit.emit("leal", ast.typeName, tmp);
@@ -334,7 +365,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
             if(cg.rm.isInUse(save)) callerSave.add(save);
         }
         
-        // Push saved onto satck first.
+        // Push saved onto stack first.
         for(Register saved : callerSave){
             cg.emit.emit("pushl", saved);
         }
@@ -407,6 +438,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
 
     @Override
     public Register methodCall(MethodCallExpr ast, Boolean arg) {
+    	
         // For method calls we extend the cdecl convention by requiring
         // the first argument to be the object instance.
         Register object = cg.eg.gen(ast.receiver());

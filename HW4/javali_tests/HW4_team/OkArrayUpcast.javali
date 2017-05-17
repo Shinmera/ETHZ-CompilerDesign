@@ -1,0 +1,11 @@
+// Check for valid upcast of array.
+class Main{
+  void main(){
+    int[] a;
+    Object o;
+    
+    a = new int[2];
+    o = (Object)a;
+ 
+  }
+}

@@ -1,0 +1,36 @@
+// Check for correct field accesses of extended classes.
+class Main{
+	Woo woo;
+	Zoo zoo;
+	DooDoo doo;
+
+  void main(){
+   	woo = new Woo();
+   	zoo = new Zoo();
+   	doo = new Doo();
+   	
+   	woo.a = 1;
+   	woo.b = 2;
+   	
+   	zoo.a = 2;
+   	zoo.b = 3;
+   	zoo.c = zoo.b;
+   	
+   	doo.a = zoo.b;
+   	doo.b = 2;
+   	doo.c = -1;
+   	doo.d = 21;
+  }
+}
+
+class Woo {
+	int a;
+	int b;
+}
+class Zoo extends Woo{
+	int a;
+	int c;
+}
+class DooDoo extends Zoo{
+	int d;
+}

@@ -1,0 +1,19 @@
+// Test null pointer access.
+class A { 
+int c;
+}
+class B { }
+
+class Main {
+   int d;
+
+   void main() {
+      A a;
+      B b;
+     a = new A();
+     a = null;
+     d = a.c;
+     
+   }
+}
+ 

@@ -1,3 +1,4 @@
+// Test call of overridden method.
 class A{
   void a(){
     write(0);

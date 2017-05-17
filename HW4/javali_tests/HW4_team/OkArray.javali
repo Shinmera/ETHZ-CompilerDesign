@@ -1,3 +1,4 @@
+// Check correct array accesses
 class Main{
   void main(){
     int[] a;

@@ -1,0 +1,8 @@
+// Check for negative array size.
+class Main{
+  void main(){
+  	int b;
+    int[] a;
+    a = new int[-1];
+  }
+}

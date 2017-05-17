@@ -113,8 +113,9 @@ class StmtGenerator extends AstVisitor<Register, Object> {
         // within a method declaration and the point at which
         // they are released for the last time.
         for(Register save : cg.rm.CALLEE_SAVE){
-            cg.emit.emit("pushl", save);
+            cg.emit.emit("pushl", save);      
         }
+        //cg.emit.emit("movl", "%esp", "%ebp");
             
         // Generate the actual body.
         cg.sg.gen(ast.body(), ast.sym);

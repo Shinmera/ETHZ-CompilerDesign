@@ -1,0 +1,16 @@
+// Test array store of invalid type;
+class A { }
+class B { }
+
+class Main {
+   void main() {
+      A a;
+      B b;
+      int[] c;
+      
+      a = new A();
+      c = new int[3];
+      
+      c[0] = a;
+   }
+}
