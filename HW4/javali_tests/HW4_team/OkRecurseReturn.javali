@@ -1,0 +1,16 @@
+class Main{
+    void main(){
+        int a;
+        a = recurse(2);
+    }
+
+    int recurse(int n){
+        int x;
+        if(n <= 1){
+            x = n;
+        }else{
+            x = recurse(n-1);
+        }
+        return x;
+    }
+}
