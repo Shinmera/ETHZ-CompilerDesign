@@ -1,0 +1,23 @@
+class Main {
+   void main() {
+		int a;
+		a = fib(20);
+		write(a);
+		writeln();
+	}
+	
+	int fib(int n) {
+ 
+      int fib;
+      int fib2;
+
+      if (n <= 1) {
+         fib = n;
+		} else { 
+         fib  = fib(n-1);
+         fib2 = fib(n-2);
+		 	fib = fib + fib2;
+		}   
+		return fib;
+    }
+}

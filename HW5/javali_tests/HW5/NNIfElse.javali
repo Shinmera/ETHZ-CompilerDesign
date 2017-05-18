@@ -1,0 +1,16 @@
+class Main {
+	void main() {
+        Main a, b;
+        int i;
+        
+        a = new Main();
+        b = null;
+        i = read();
+        if(i >= 0) {
+        	a = null;
+        }
+        else {
+        	b = new Main();
+        }
+	}
+}

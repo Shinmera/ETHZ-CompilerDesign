@@ -1,0 +1,14 @@
+/* Test that an invalid field name is detected */
+
+class X {
+	int field;
+}
+
+class Main {
+   void main() {
+      X x;
+		x = new X();
+		x.field = 0;
+		x.notafield = 1;    /* ILLEGAL: bad field name */
+	}
+}

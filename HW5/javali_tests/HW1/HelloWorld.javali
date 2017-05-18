@@ -1,0 +1,7 @@
+/* Kind of like hello world */
+class Main {
+   void main() {
+      write(53110);
+      writeln();    
+   }
+}

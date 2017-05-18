@@ -1,0 +1,20 @@
+class Main {
+	int field;
+	int[] arrayfield;
+	
+	void main() {
+		int local;
+		int[] array;
+		
+		array = null;
+		arrayfield = null;
+		local = 1;
+		field = 3;
+		
+		write(local);
+		writeln();
+		m();
+	}
+	
+	void m() {}
+}

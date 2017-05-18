@@ -1,0 +1,28 @@
+/* Test read() with different kinds of LHS values */
+class Main {
+   int x;
+   
+   void main() {
+      int y;
+      int[] arr; 
+    	
+      write(1);
+    	writeln();
+    	
+      y = read();
+    	write(y + 1);
+    	writeln();
+    	
+      x = read();
+      write(x + 1);
+    	writeln();
+    	
+      arr = new int[64];
+      arr[x] = read();
+      write(arr[x] + 1);
+      writeln();
+   }
+   
+}
+
+

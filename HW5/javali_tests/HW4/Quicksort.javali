@@ -1,0 +1,81 @@
+/* Overall test of arrays, loops, etc. that does a simple quicksort */
+
+class Record {
+   int a;
+   void print() {
+      write(a); 
+      writeln();
+   }
+}
+
+class Main {
+   Record [] a;
+   int i;
+
+   void swap(Record r1, Record r2) {
+      int temp;
+   
+      temp = r1.a;
+      r1.a = r2.a;
+      r2.a = temp;
+   }
+   
+   void sort(int left, int right) {
+      int i,j;
+      int m;
+      
+      m = (a[left].a + a[right].a) / 2;
+      i = left; 
+      j = right;
+      while (i <= j) {
+         while (a[i].a < m) { i = i+1; }
+         while (a[j].a > m) { j = j-1; }
+         if (i <= j) {
+            swap(a[i], a[j]);
+            i = i + 1;
+            j = j - 1;
+         }
+      }
+      if (left < j) { sort(left, j); }
+      if (i < right) { sort(i, right); }
+   }
+   
+   void main() {
+   
+      int SIZE;        
+      int j;
+
+      SIZE = 5;
+      
+      a = new Record[SIZE];
+      j = 0;
+      while (j < SIZE) {
+         a[j] = new Record();
+         j = j + 1;
+      }
+      a[0].a = 5; 
+      a[1].a = 3; 
+      a[2].a = 1; 
+      a[3].a = 4; 
+      a[4].a = 2;
+      
+      /* Numbers before sorting */
+      j = 0;
+      while (j < SIZE) {
+         a[j].print();
+         j = j + 1;
+      }
+      writeln();
+      
+      sort(0, 4);
+      
+      /* Numbers after sorting */
+      j = 0;
+      while (j < SIZE) {
+         a[j].print();
+         j = j + 1;
+      }
+      writeln();
+      
+   }
+}

@@ -1,0 +1,19 @@
+class Main {
+	void main() {
+		int a, b, c;
+		
+		a = 1;
+		b = 1;
+		c = 1;
+		a = 2;
+		if (false) {
+			a = 3;
+		} else {
+			a = 4;
+			while (false) {
+				b = 2;
+			}
+			c = 2;
+		}
+	}
+}
