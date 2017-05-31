@@ -2,3 +2,5 @@
 /javali_tests/*/*.ref
 /javali_tests/*/*.dot
 /javali_tests/*/*.err
+/javali_tests/*/*.bin
+/javali_tests/*/*.s
