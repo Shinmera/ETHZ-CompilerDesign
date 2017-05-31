@@ -18,59 +18,59 @@ import cd.util.debug.AstOneLine;
  */
 public class ReachingDefsAnalysis extends DataFlowAnalysis<Set<Def>> {
 
-	/**
-	 * Perform reaching definitions analysis.
-	 * 
-	 * @param cfg
-	 *            {@link ControlFlowGraph} of a {@link MethodDecl}
-	 */
-	public ReachingDefsAnalysis(ControlFlowGraph cfg) {
-		super(cfg);
+    /**
+     * Perform reaching definitions analysis.
+     * 
+     * @param cfg
+     *            {@link ControlFlowGraph} of a {@link MethodDecl}
+     */
+    public ReachingDefsAnalysis(ControlFlowGraph cfg) {
+        super(cfg);
 		
-		throw new ToDoException();
-	}
+        throw new ToDoException();
+    }
 	
-	@Override
-	protected Set<Def> initialState() {
-		throw new ToDoException();
-	}
+    @Override
+    protected Set<Def> initialState() {
+        throw new ToDoException();
+    }
 	
-	@Override
-	protected Set<Def> startState() {
-		throw new ToDoException();
-	}
+    @Override
+    protected Set<Def> startState() {
+        throw new ToDoException();
+    }
 	
-	@Override
-	protected Set<Def> transferFunction(BasicBlock block, Set<Def> inState) {
-		throw new ToDoException();
-	}
+    @Override
+    protected Set<Def> transferFunction(BasicBlock block, Set<Def> inState) {
+        throw new ToDoException();
+    }
 	
-	@Override
-	protected Set<Def> join(Set<Set<Def>> states) {
-		throw new ToDoException();
-	}
+    @Override
+    protected Set<Def> join(Set<Set<Def>> states) {
+        throw new ToDoException();
+    }
 	
-	/**
-	 * Class representing a definition in the {@link Ast} of a method.
-	 */
-	public static class Def {
-		public final Assign assign;
-		public final String target;
+    /**
+     * Class representing a definition in the {@link Ast} of a method.
+     */
+    public static class Def {
+        public final Assign assign;
+        public final String target;
 		
-		/**
-		 * Create a {@link Def} from an {@link Assign} of the form <code>var = ...</code>
-		 */
-		public Def(Assign assign) {
-			if (!(assign.left() instanceof Var) || ((Var) assign.left()).sym.kind == Kind.FIELD)
-				throw new IllegalArgumentException("definitions must have (local) variable on LHS");
+        /**
+         * Create a {@link Def} from an {@link Assign} of the form <code>var = ...</code>
+         */
+        public Def(Assign assign) {
+            if (!(assign.left() instanceof Var) || ((Var) assign.left()).sym.kind == Kind.FIELD)
+                throw new IllegalArgumentException("definitions must have (local) variable on LHS");
 	
-			this.assign = assign;
-			this.target = ((Var) assign.left()).name;
-		}
+            this.assign = assign;
+            this.target = ((Var) assign.left()).name;
+        }
 		
-		@Override
-		public String toString() {
-			return AstOneLine.toString(assign);
-		}
-	}
+        @Override
+        public String toString() {
+            return AstOneLine.toString(assign);
+        }
+    }
 }
