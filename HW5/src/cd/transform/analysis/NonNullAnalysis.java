@@ -1,5 +1,6 @@
 package cd.transform.analysis;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import cd.ToDoException;
@@ -25,7 +26,7 @@ public class NonNullAnalysis extends DataFlowAnalysis<Set<VariableSymbol>> {
         
     @Override
     protected Set<VariableSymbol> initialState() {
-        throw new ToDoException();
+        return new HashSet<VariableSymbol>();
     }
         
     @Override
@@ -40,7 +41,15 @@ public class NonNullAnalysis extends DataFlowAnalysis<Set<VariableSymbol>> {
         
     @Override
     protected Set<VariableSymbol> join(Set<Set<VariableSymbol>> states) {
-        throw new ToDoException();
+        Set<VariableSymbol> out = new HashSet<VariableSymbol>();
+        // Compute intersection.
+        if(0 < states.size()){
+            out.addAll((Set<VariableSymbol>)states.toArray()[0]);
+            for(Set<VariableSymbol> set : states){
+                out.retainAll(set);
+            }
+        }
+        return out;
     }
         
     /**
