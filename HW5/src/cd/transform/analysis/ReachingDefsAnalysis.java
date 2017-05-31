@@ -1,11 +1,15 @@
 package cd.transform.analysis;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import cd.ToDoException;
 import cd.ir.Ast;
 import cd.ir.Ast.Assign;
 import cd.ir.Ast.MethodDecl;
+import cd.ir.Ast.Stmt;
 import cd.ir.Ast.Var;
 import cd.ir.BasicBlock;
 import cd.ir.ControlFlowGraph;
@@ -17,7 +21,9 @@ import cd.util.debug.AstOneLine;
  * Computes the sets of reaching definitions for each basic block.
  */
 public class ReachingDefsAnalysis extends DataFlowAnalysis<Set<Def>> {
-
+    private Map<BasicBlock, Set<Def>> gen = new HashMap<BasicBlock, Set<Def>>();
+    private Map<BasicBlock, Set<Def>> kill = new HashMap<BasicBlock, Set<Def>>();
+    
     /**
      * Perform reaching definitions analysis.
      * 
@@ -26,48 +32,86 @@ public class ReachingDefsAnalysis extends DataFlowAnalysis<Set<Def>> {
      */
     public ReachingDefsAnalysis(ControlFlowGraph cfg) {
         super(cfg);
-		
-        throw new ToDoException();
+        // Figure out gens.
+        for(BasicBlock block : cfg.allBlocks){
+            Map<String, Assign> defs = new HashMap<String, Assign>();
+            for(Stmt stmt : block.stmts){
+                if(stmt instanceof Assign){
+                    defs.put(((Assign)stmt).left().toString(), (Assign)stmt);
+                }
+            }
+            Set<Def> gen = new HashSet<Def>();
+            for(Assign def : defs.values()){
+                gen.add(new Def(def));
+            }
+            this.gen.put(block, gen);
+        }
+        // Figure out kills.
+        for(BasicBlock block : cfg.allBlocks){
+            Set<Def> kill = new HashSet<Def>();
+            for(Def def : gen.get(block)){
+                for(BasicBlock otherBlock : cfg.allBlocks){
+                    if(otherBlock != block){
+                        for(Def otherDef : gen.get(otherBlock)){
+                            if(def.target.equals(otherDef.target)){
+                                kill.add(otherDef);
+                            }
+                        }
+                    }
+                }
+            }
+            this.kill.put(block, kill);
+        }
+        
+        iterate();
     }
-	
+        
     @Override
     protected Set<Def> initialState() {
-        throw new ToDoException();
+        return new HashSet<Def>();
     }
-	
+        
     @Override
     protected Set<Def> startState() {
-        throw new ToDoException();
+        return new HashSet<Def>();
     }
-	
+        
     @Override
     protected Set<Def> transferFunction(BasicBlock block, Set<Def> inState) {
-        throw new ToDoException();
+        Set<Def> out = new HashSet<Def>();
+        out.addAll(inState);
+        out.removeAll(kill.get(block));
+        out.addAll(gen.get(block));
+        return out;
     }
-	
+        
     @Override
     protected Set<Def> join(Set<Set<Def>> states) {
-        throw new ToDoException();
+        Set<Def> joined = new HashSet<Def>();
+        for(Set<Def> state : states){
+            joined.addAll(state);
+        }
+        return joined;
     }
-	
+        
     /**
      * Class representing a definition in the {@link Ast} of a method.
      */
     public static class Def {
         public final Assign assign;
         public final String target;
-		
+                
         /**
          * Create a {@link Def} from an {@link Assign} of the form <code>var = ...</code>
          */
         public Def(Assign assign) {
             if (!(assign.left() instanceof Var) || ((Var) assign.left()).sym.kind == Kind.FIELD)
                 throw new IllegalArgumentException("definitions must have (local) variable on LHS");
-	
+        
             this.assign = assign;
             this.target = ((Var) assign.left()).name;
         }
-		
+                
         @Override
         public String toString() {
             return AstOneLine.toString(assign);

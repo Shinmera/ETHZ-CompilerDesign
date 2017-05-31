@@ -14,35 +14,35 @@ import cd.ir.Symbol.VariableSymbol;
  * non-<code>null</code> variables.
  */
 public class NonNullAnalysis extends DataFlowAnalysis<Set<VariableSymbol>> {
-	
+        
     public NonNullAnalysis(MethodDecl method) {
         super(method.cfg);
         if(method.cfg == null)
             throw new IllegalArgumentException("method is missing CFG");
-		
+                
         throw new ToDoException();
     }
-	
+        
     @Override
     protected Set<VariableSymbol> initialState() {
         throw new ToDoException();
     }
-	
+        
     @Override
     protected Set<VariableSymbol> startState() {
         throw new ToDoException();
     }
-	
+        
     @Override
     protected Set<VariableSymbol> transferFunction(BasicBlock block, Set<VariableSymbol> inState) {
         throw new ToDoException();
     }
-	
+        
     @Override
     protected Set<VariableSymbol> join(Set<Set<VariableSymbol>> states) {
         throw new ToDoException();
     }
-	
+        
     /**
      * Returns the set of variables that are guaranteed to be non-<code>null</code> before
      * the given statement.
@@ -50,7 +50,7 @@ public class NonNullAnalysis extends DataFlowAnalysis<Set<VariableSymbol>> {
     public Set<VariableSymbol> nonNullBefore(Stmt stmt) {
         throw new ToDoException();
     }
-	
+        
     /**
      * Returns the set of variables that are guaranteed to be non-<code>null</code> before
      * the condition of the given basic block.
