@@ -40,33 +40,39 @@ public class CfgBuilder extends AstVisitor<BasicBlock, BasicBlock>{
     public BasicBlock ifElse(IfElse ast, BasicBlock block){
         cfg.terminateInCondition(block, ast.condition());
         
-        visit(ast.then(), block.trueSuccessor());
-        if(ast.otherwise() != null)
-            visit(ast.otherwise(), block.falseSuccessor());
+        BasicBlock otherwise = null;
+        BasicBlock then = visit(ast.then(), block.trueSuccessor());
+        if(ast.otherwise() != null){
+            otherwise = visit(ast.otherwise(), block.falseSuccessor());
+        }
         
         BasicBlock rest = cfg.newBlock();
-        cfg.connect(block.trueSuccessor(), rest);
-        cfg.connect(block.falseSuccessor(), rest);
+        cfg.connect(then, rest);
+        if(otherwise != null){
+            cfg.connect(otherwise, rest);
+        }
         return rest;
     }
     
     @Override
     public BasicBlock whileLoop(WhileLoop ast, BasicBlock block){
+        BasicBlock test = cfg.newBlock();
         BasicBlock body = cfg.newBlock();
-
-        block.condition = ast.condition();
-        cfg.connect(block, body);
-        visit(ast.body(), body);
-
         BasicBlock rest = cfg.newBlock();
-        cfg.connect(block, rest);
+
+        test.condition = ast.condition();
+        cfg.connect(block, test);
+        cfg.connect(test, body);
+        cfg.connect(visit(ast.body(), body), test);
+
+        cfg.connect(test, rest);
         return rest;
     }
 
     @Override
     public BasicBlock returnStmt(ReturnStmt ast, BasicBlock block){
         cfg.connect(block, cfg.end);
-        return block;
+        return dfltStmt(ast, block);
     }
 
     @Override
