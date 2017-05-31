@@ -60,19 +60,17 @@ public abstract class DataFlowAnalysis<State> {
         while(change){
             change = false;
             for(BasicBlock block : cfg.allBlocks){
-                if(block != cfg.start){
-                    Set<State> states = new HashSet<State>();
-                    for(BasicBlock predecessor : block.predecessors){
-                        states.add(outStates.get(predecessor));
-                    }
-
-                    State in = join(states);
-                    State out = transferFunction(block, in);
-                    if(!outStates.get(out).equals(out)){
-                        change = true;
-                    }
-                    outStates.put(block, out);
+                Set<State> states = new HashSet<State>();
+                for(BasicBlock predecessor : block.predecessors){
+                    states.add(outStates.get(predecessor));
                 }
+
+                State in = join(states);
+                State out = transferFunction(block, in);
+                if(!outStates.get(block).equals(out)){
+                    change = true;
+                }
+                outStates.put(block, out);
             }
         }
     }

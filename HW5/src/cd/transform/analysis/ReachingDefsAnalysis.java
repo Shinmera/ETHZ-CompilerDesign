@@ -34,16 +34,15 @@ public class ReachingDefsAnalysis extends DataFlowAnalysis<Set<Def>> {
         super(cfg);
         // Figure out gens.
         for(BasicBlock block : cfg.allBlocks){
-            Map<String, Assign> defs = new HashMap<String, Assign>();
+            Map<String, Def> defs = new HashMap<String, Def>();
             for(Stmt stmt : block.stmts){
-                if(stmt instanceof Assign){
-                    defs.put(((Assign)stmt).left().toString(), (Assign)stmt);
+                if(stmt instanceof Assign && ((Assign)stmt).left() instanceof Var){
+                    Def def = new Def((Assign)stmt);
+                    defs.put(def.target, def);
                 }
             }
             Set<Def> gen = new HashSet<Def>();
-            for(Assign def : defs.values()){
-                gen.add(new Def(def));
-            }
+            gen.addAll(defs.values());
             this.gen.put(block, gen);
         }
         // Figure out kills.
