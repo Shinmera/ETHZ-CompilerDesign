@@ -1,0 +1,21 @@
+// Variable c is supposed to be non-null after method call even if it has not been initialized.
+class Main {
+	void main() {
+		A c;
+		A d;
+		c = new A();
+		d = method(c);
+		
+	}
+	
+	A method(A b) {
+	    A a;
+	    a = b;
+	    return a;
+   }
+}
+
+class A {
+	
+}
+

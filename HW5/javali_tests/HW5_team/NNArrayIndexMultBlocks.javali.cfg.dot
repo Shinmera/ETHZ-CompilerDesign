@@ -1,0 +1,43 @@
+digraph G {
+  graph [ rankdir = "LR" ];
+  subgraph cluster_0 {
+    label = "Main.main"
+    M0_BB0 [
+      shape="record"
+      label="BB0|x = 0|c = null|If: (x \<= 0)"
+    ];
+    M0_BB0 -> M0_BB2;
+    M0_BB0 -> M0_BB3 [label="False"];
+    M0_BB1 [
+      shape="record"
+      label="BB1"
+    ];
+    M0_BB2 [
+      shape="record"
+      label="BB2|c = new A()|b = null|b = c.method(...)"
+    ];
+    M0_BB2 -> M0_BB4;
+    M0_BB3 [
+      shape="record"
+      label="BB3|b = new A[][3]"
+    ];
+    M0_BB3 -> M0_BB4;
+    M0_BB4 [
+      shape="record"
+      label="BB4|c = b[1]"
+    ];
+    M0_BB4 -> M0_BB1;
+  }
+  subgraph cluster_1 {
+    label = "A.method"
+    M1_BB0 [
+      shape="record"
+      label="BB0|a = new A[][2]|return a"
+    ];
+    M1_BB0 -> M1_BB1;
+    M1_BB1 [
+      shape="record"
+      label="BB1"
+    ];
+  }
+}

@@ -1,0 +1,12 @@
+Main.main
+  BB0 out:
+  BB1 out:
+
+
+Main.swap
+  BB0 out:
+    temp = r1.a
+  BB1 out:
+    temp = r1.a
+
+

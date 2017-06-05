@@ -1,0 +1,13 @@
+A.method
+  BB0 out: [a]
+    a = new A(): []
+    return a: [a]
+  BB1 out: [a]
+
+
+Main.main
+  BB0 out: [c]
+    b = c.method(...): []
+  BB1 out: [c]
+
+

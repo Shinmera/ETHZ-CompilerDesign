@@ -1,0 +1,10 @@
+// Variable to variable assignment: the assigned variable is null.
+
+class Main {
+	void main() {
+        Main a;
+        Main b;
+        b = a;
+        a = new Main();     
+	}
+}

@@ -1,0 +1,29 @@
+// Upcast and downcast. Also check if the casted variable (arg of cast) is non-null.
+class Main {
+	void main() {
+		A a;
+		B b;
+		B c;
+		int x;
+		x = 3;
+		
+		b = new B();
+		
+		while (x >= 0) {
+			c = (B)a;
+			a = b;
+			b = (B)a;
+			
+			
+			x = x-1;
+		}
+		
+	}
+}
+
+class A {	
+}
+class B extends A {
+
+}
+

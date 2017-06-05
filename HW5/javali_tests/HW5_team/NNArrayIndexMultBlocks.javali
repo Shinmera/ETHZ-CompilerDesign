@@ -1,0 +1,31 @@
+// Check if variable is null or non-null on array index access after if-else branch. Also check if index is initialized.
+class Main {
+	void main() {
+		A[] b;
+		A c;
+		int x;
+		
+		x = 0;
+		c = null;
+		if (x <= 0) {
+			c = new A();
+			b = null;
+			b = c.method();
+		}
+		else {
+			b = new A[3];
+		}
+		c = b[1];
+	}
+	
+	
+}
+
+class A {
+	A[] method() {
+	    A[] a;
+	    a = new A[2];
+	    return a;
+   }
+}
+

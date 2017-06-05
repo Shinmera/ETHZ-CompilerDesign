@@ -1,0 +1,13 @@
+Main.main
+  BB0 out: [b]
+    x = 3: []
+    b = new A(): []
+  BB1 out: [b]
+  BB2 out: [b]
+    (x >= 0): [b]
+  BB3 out: [a, b]
+    a = b: [b]
+    x = (x - 1): [a, b]
+  BB4 out: [b]
+
+

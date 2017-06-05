@@ -1,0 +1,32 @@
+Main.main
+  BB0 out:
+    b = new B()
+    x = 3
+  BB1 out:
+    a = b
+    b = (B)(a)
+    b = new B()
+    c = (B)(a)
+    x = (x - 1)
+    x = 3
+  BB2 out:
+    a = b
+    b = (B)(a)
+    b = new B()
+    c = (B)(a)
+    x = (x - 1)
+    x = 3
+  BB3 out:
+    a = b
+    b = (B)(a)
+    c = (B)(a)
+    x = (x - 1)
+  BB4 out:
+    a = b
+    b = (B)(a)
+    b = new B()
+    c = (B)(a)
+    x = (x - 1)
+    x = 3
+
+

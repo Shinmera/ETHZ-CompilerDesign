@@ -19,7 +19,7 @@ public class CfgBuilder extends AstVisitor<BasicBlock, BasicBlock>{
         cfg = mdecl.cfg = new ControlFlowGraph();
         cfg.start = cfg.newBlock(); // Note: Use newBlock() to create new basic blocks
         cfg.end = cfg.newBlock(); // unique exit block to which all blocks that end with a return stmt. lead
-
+        
         BasicBlock lastBlock = visit(mdecl, cfg.start);
         if(!cfg.end.predecessors.contains(lastBlock)){
             cfg.connect(lastBlock, cfg.end);

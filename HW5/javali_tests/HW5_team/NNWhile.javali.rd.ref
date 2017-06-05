@@ -1,0 +1,25 @@
+Main.main
+  BB0 out:
+    b = new A()
+    x = 3
+  BB1 out:
+    a = b
+    b = new A()
+    x = (x - 1)
+    x = 3
+  BB2 out:
+    a = b
+    b = new A()
+    x = (x - 1)
+    x = 3
+  BB3 out:
+    a = b
+    b = new A()
+    x = (x - 1)
+  BB4 out:
+    a = b
+    b = new A()
+    x = (x - 1)
+    x = 3
+
+

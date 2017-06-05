@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import cd.Config;
 import cd.ToDoException;
 import cd.backend.codegen.RegisterManager.Register;
 import cd.ir.Ast.BinaryOp;
@@ -264,7 +265,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         cg.emit.emit("addl", "$2", size);  
         
         // Allocate space for the array.
-        Register ptr = cdeclCall("calloc", size, "$4");
+        Register ptr = cdeclCall(Config.CALLOC, size, "$4");
         
         // Save the number of elements in the array header
         cg.emit.emit("subl", "$2", size);
@@ -304,7 +305,7 @@ class ExprGenerator extends ExprVisitor<Register, Boolean> {
         
         // Allocate space on the heap.
         int size = (symbol.effectiveFields.size()+1)*4;
-        Register ptr = cdeclCall("calloc", "$"+size, "$4");
+        Register ptr = cdeclCall(Config.CALLOC, "$"+size, "$4");
 
         // Save a reference to the vtable in the object header
         Register tmp = cg.rm.getRegister();

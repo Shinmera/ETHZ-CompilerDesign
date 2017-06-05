@@ -1,0 +1,16 @@
+Main.main
+  BB0 out:
+    c = new A()
+    d = this.method(...)
+  BB1 out:
+    c = new A()
+    d = this.method(...)
+
+
+Main.method
+  BB0 out:
+    a = b
+  BB1 out:
+    a = b
+
+

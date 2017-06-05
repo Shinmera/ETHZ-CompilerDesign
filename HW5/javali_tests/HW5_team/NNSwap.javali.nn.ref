@@ -1,0 +1,13 @@
+Main.main
+  BB0 out: []
+  BB1 out: []
+
+
+Main.swap
+  BB0 out: [r1, r2]
+    temp = r1.a: []
+    r1.a = r2.a: [r1]
+    r2.a = temp: [r1, r2]
+  BB1 out: [r1, r2]
+
+

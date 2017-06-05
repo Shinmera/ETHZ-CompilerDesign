@@ -1,0 +1,21 @@
+// 
+class Main {
+	void main() {
+		A[] b;
+		A c;
+		
+		b = c.method();
+		c = b[1];
+	}
+	
+	
+}
+
+class A {
+	A[] method() {
+	    A[] a;
+	    a = new A[2];
+	    return a;
+   }
+}
+

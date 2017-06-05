@@ -1,0 +1,23 @@
+// Variable to variable assignment: the assigned variable is initialized in another block.
+
+class Main {
+	void main() {
+		int x;
+        Main a;
+        Main b;
+        Main c;
+        c = new Main();
+        
+        x = 1;
+        
+        b = null;
+        
+        if (x > 0) {
+        	a = new Main();  
+        } else {
+        	a = c;
+        }
+        b = a;
+           
+	}
+}

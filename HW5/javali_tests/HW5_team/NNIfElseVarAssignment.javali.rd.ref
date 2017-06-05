@@ -1,0 +1,29 @@
+Main.main
+  BB0 out:
+    b = null
+    c = new Main()
+    x = 1
+  BB1 out:
+    a = c
+    a = new Main()
+    b = a
+    c = new Main()
+    x = 1
+  BB2 out:
+    a = new Main()
+    b = null
+    c = new Main()
+    x = 1
+  BB3 out:
+    a = c
+    b = null
+    c = new Main()
+    x = 1
+  BB4 out:
+    a = c
+    a = new Main()
+    b = a
+    c = new Main()
+    x = 1
+
+

@@ -1,0 +1,15 @@
+Main.main
+  BB0 out: [c]
+    c = new Main(): []
+    x = 1: [c]
+    b = null: [c]
+    (x > 0): [c]
+  BB1 out: [a, b, c]
+  BB2 out: [a, c]
+    a = new Main(): [c]
+  BB3 out: [a, c]
+    a = c: [c]
+  BB4 out: [a, b, c]
+    b = a: [a, c]
+
+

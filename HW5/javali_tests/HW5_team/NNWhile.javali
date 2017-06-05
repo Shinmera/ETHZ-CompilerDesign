@@ -1,0 +1,22 @@
+// Check nullness in while loop
+class Main {
+	void main() {
+		A a;
+		A b;
+		int x;
+		
+		x = 3;	
+		b = new A();
+		
+		while (x >= 0) {
+			a = b;
+			x = x-1;
+		}
+		
+	}
+}
+
+class A {	
+}
+
+

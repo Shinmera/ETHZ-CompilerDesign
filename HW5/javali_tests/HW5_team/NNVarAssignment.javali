@@ -1,0 +1,10 @@
+// Checks if variable to variable assignment is correctly detected as non-null.
+
+class Main {
+	void main() {
+        Main a;
+        Main b;
+        a = new Main();
+        b = a;
+	}
+}

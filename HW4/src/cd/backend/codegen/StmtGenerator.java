@@ -31,40 +31,40 @@ import cd.util.debug.AstOneLine;
  * Generates code to process statements and declarations.
  */
 class StmtGenerator extends AstVisitor<Register, Object> {
-    protected final AstCodeGenerator cg;
+	protected final AstCodeGenerator cg;
 
-    StmtGenerator(AstCodeGenerator astCodeGenerator) {
-        cg = astCodeGenerator;
-    }
+	StmtGenerator(AstCodeGenerator astCodeGenerator) {
+		cg = astCodeGenerator;
+	}
 
-    public void gen(Ast ast) {
-        gen(ast, null);
-    }
+	public void gen(Ast ast) {
+		gen(ast, null);
+	}
 
-    public void gen(Ast ast, Object arg){
-        visit(ast, arg);
-    }
+	public void gen(Ast ast, Object arg) {
+		visit(ast, arg);
+	}
 
-    @Override
-    public Register visit(Ast ast, Object arg) {
-        try {
-            cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
-            return super.visit(ast, arg);
-        } finally {
-            cg.emit.decreaseIndent();
-        }
-    }
+	@Override
+	public Register visit(Ast ast, Object arg) {
+		try {
+			cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
+			return super.visit(ast, arg);
+		} finally {
+			cg.emit.decreaseIndent();
+		}
+	}
 
-    @Override
-    public Register methodCall(MethodCall ast, Object dummy) {
-        Register reg = cg.eg.methodCall(ast.getMethodCallExpr(), null);
-        cg.rm.releaseRegister(reg);
-        return null;
-    }
+	@Override
+	public Register methodCall(MethodCall ast, Object dummy) {
+		Register reg = cg.eg.methodCall(ast.getMethodCallExpr(), null);
+		cg.rm.releaseRegister(reg);
+		return null;
+	}
 
-    public Register methodCall(MethodSymbol sym, List<Expr> allArguments) {
-        throw new RuntimeException("Not required");
-    }
+	public Register methodCall(MethodSymbol sym, List<Expr> allArguments) {
+		throw new RuntimeException("Not required");
+	}
 
     @Override
     public Register classDecl(ClassDecl ast, Object arg) {
@@ -90,21 +90,10 @@ class StmtGenerator extends AstVisitor<Register, Object> {
         return null;
     }
 
-    @Override
-    public Register methodDecl(MethodDecl ast, Object arg) {
-        cg.emit.emitRaw(".globl "+ast.sym.getLabel());
-        cg.emit.emitLabel(ast.sym.getLabel());
-            
-        // Allocate a new stack frame
-        cg.emit.emit("pushl", "%ebp");
-        cg.emit.emit("movl", "%esp", "%ebp");
-        
-        // Write out the declarations.
-        int stackSize = 0;
-        for(VariableSymbol var : ast.sym.locals.values()){
-            cg.emit.emit("pushl", "$0");
-            stackSize += 4;
-        }
+	@Override
+	public Register methodDecl(MethodDecl ast, Object arg) {
+		cg.emit.emitRaw(".globl " + ast.sym.getLabel());
+		cg.emit.emitLabel(ast.sym.getLabel());
 
         // Conservatively push callee-saved registers.
         // This could be improved by only saving the register
@@ -123,112 +112,136 @@ class StmtGenerator extends AstVisitor<Register, Object> {
         // Generate exit label.
         cg.emit.emitLabel(ast.sym.getLabel()+".exit");
 
-        // Pop callee-saved registers.
-        for(Register save : cg.rm.CALLEE_SAVE){
-            cg.emit.emit("popl", save);
-        }
-        
-        // Restore stack size lost to local variables
-        cg.emit.emit("addl", "$"+stackSize, "%esp");
-        
-        cg.emit.emit("popl", "%ebp");
-        cg.emit.emitRaw("ret");
-        return null;
-    }
+		// Write out the declarations.
+		int stackSize = 0;
+		for (VariableSymbol var : ast.sym.locals.values()) {
+			cg.emit.emit("pushl", "$0");
+			stackSize += 4;
+		}
 
-    @Override
-    public Register ifElse(IfElse ast, Object arg) {
-        Register reg;
-        String elseLabel = cg.emit.uniqueLabel();
+		// Conservatively push callee-saved registers.
+		// This could be improved by only saving the register
+		// once it is actually being used. This would require
+		// tracking which registers have already been "touched"
+		// within a method declaration and the point at which
+		// they are released for the last time.
+		for (Register save : cg.rm.CALLEE_SAVE) {
+			cg.emit.emit("pushl", save);
+			cg.emit.emit("movl", "%esp", "%ebp");
+		}
 
-        reg = cg.eg.gen(ast.condition());
-        // Anything greater than zero is "true"
-        cg.emit.emit("cmpl", "$0", reg);
-        cg.emit.emit("je", elseLabel);
-        cg.rm.releaseRegister(reg);
-        
-        cg.sg.gen(ast.then());
+		// Generate the actual body.
+		cg.sg.gen(ast.body(), ast.sym);
 
-        if(ast.otherwise() == null){
-            cg.emit.emitLabel(elseLabel);
-        }else{
-            String endLabel = cg.emit.uniqueLabel();
-            cg.emit.emit("jmp", endLabel);
-            
-            cg.emit.emitLabel(elseLabel);
-            cg.sg.gen(ast.otherwise());
+		// Generate exit label.
+		cg.emit.emitLabel(ast.sym.getLabel() + "." + Config.EXIT);
 
-            cg.emit.emitLabel(endLabel);
-        }
-        return null;
-    }
+		// Pop callee-saved registers.
+		for (Register save : cg.rm.CALLEE_SAVE) {
+			cg.emit.emit("popl", save);
+		}
 
-    @Override
-    public Register whileLoop(WhileLoop ast, Object arg) {
-        Register reg;
-        String testLabel = cg.emit.uniqueLabel();
-        String endLabel = cg.emit.uniqueLabel();
+		// Restore stack size lost to local variables
+		cg.emit.emit("addl", "$" + stackSize, "%esp");
 
-        cg.emit.emitLabel(testLabel);
-        reg = cg.eg.gen(ast.condition());
-        cg.emit.emit("cmpl", "$0", reg);
-        cg.emit.emit("je", endLabel);
-        cg.rm.releaseRegister(reg);
+		cg.emit.emit("popl", "%ebp");
+		cg.emit.emitRaw("ret");
+		return null;
+	}
 
-        cg.sg.gen(ast.body());
-        cg.emit.emit("jmp", testLabel);
-        cg.emit.emitLabel(endLabel);
+	@Override
+	public Register ifElse(IfElse ast, Object arg) {
+		Register reg;
+		String elseLabel = cg.emit.uniqueLabel();
 
-        return null;
-    }
+		reg = cg.eg.gen(ast.condition());
+		// Anything greater than zero is "true"
+		cg.emit.emit("cmpl", "$0", reg);
+		cg.emit.emit("je", elseLabel);
+		cg.rm.releaseRegister(reg);
 
-    @Override
-    public Register assign(Assign ast, Object arg) {
-        Register left = cg.eg.gen(ast.left(), true);
-        Register right = cg.eg.gen(ast.right());
-        cg.emit.emit("movl", right, "("+left+")");
-        cg.rm.releaseRegister(right);
-        cg.rm.releaseRegister(left);
-        return null;
-    }
+		cg.sg.gen(ast.then());
 
-    @Override
-    public Register builtInWrite(BuiltInWrite ast, Object arg) {
-        {
-            Register reg = cg.eg.gen(ast.arg());
-            cg.emit.emit("sub", constant(16), STACK_REG);
-            cg.emit.emitStore(reg, 4, STACK_REG);
-            cg.emit.emitStore("$STR_D", 0, STACK_REG);
-            cg.emit.emit("call", Config.PRINTF);
-            cg.emit.emit("add", constant(16), STACK_REG);
-            cg.rm.releaseRegister(reg);
-            return null;
-        }
-    }
+		if (ast.otherwise() == null) {
+			cg.emit.emitLabel(elseLabel);
+		} else {
+			String endLabel = cg.emit.uniqueLabel();
+			cg.emit.emit("jmp", endLabel);
 
-    @Override
-    public Register builtInWriteln(BuiltInWriteln ast, Object arg) {
-        {
-            cg.emit.emit("sub", constant(16), STACK_REG);
-            cg.emit.emitStore("$STR_NL", 0, STACK_REG);
-            cg.emit.emit("call", Config.PRINTF);
-            cg.emit.emit("add", constant(16), STACK_REG);
-            return null;
-        }
-    }
+			cg.emit.emitLabel(elseLabel);
+			cg.sg.gen(ast.otherwise());
 
-    @Override
-    public Register returnStmt(ReturnStmt ast, Object arg) {
-        if(ast.arg() == null){
-            cg.emit.emit("movl", "$0", "%eax");
-        }else{
-            Register reg = cg.eg.gen(ast.arg());
-            if(reg != RegisterManager.Register.EAX){
-                cg.emit.emit("movl", reg, "%eax");
-                cg.rm.releaseRegister(reg);
-            }
-        }
-        cg.emit.emit("jmp", ((MethodSymbol)arg).getLabel()+".exit");
-        return null;
-    }
+			cg.emit.emitLabel(endLabel);
+		}
+		return null;
+	}
+
+	@Override
+	public Register whileLoop(WhileLoop ast, Object arg) {
+		Register reg;
+		String testLabel = cg.emit.uniqueLabel();
+		String endLabel = cg.emit.uniqueLabel();
+
+		cg.emit.emitLabel(testLabel);
+		reg = cg.eg.gen(ast.condition());
+		cg.emit.emit("cmpl", "$0", reg);
+		cg.emit.emit("je", endLabel);
+		cg.rm.releaseRegister(reg);
+
+		cg.sg.gen(ast.body());
+		cg.emit.emit("jmp", testLabel);
+		cg.emit.emitLabel(endLabel);
+
+		return null;
+	}
+
+	@Override
+	public Register assign(Assign ast, Object arg) {
+		Register left = cg.eg.gen(ast.left(), true);
+		Register right = cg.eg.gen(ast.right());
+		cg.emit.emit("movl", right, "(" + left + ")");
+		cg.rm.releaseRegister(right);
+		cg.rm.releaseRegister(left);
+		return null;
+	}
+
+	@Override
+	public Register builtInWrite(BuiltInWrite ast, Object arg) {
+		{
+			Register reg = cg.eg.gen(ast.arg());
+			cg.emit.emit("sub", constant(16), STACK_REG);
+			cg.emit.emitStore(reg, 4, STACK_REG);
+			cg.emit.emitStore("$STR_D", 0, STACK_REG);
+			cg.emit.emit("call", Config.PRINTF);
+			cg.emit.emit("add", constant(16), STACK_REG);
+			cg.rm.releaseRegister(reg);
+			return null;
+		}
+	}
+
+	@Override
+	public Register builtInWriteln(BuiltInWriteln ast, Object arg) {
+		{
+			cg.emit.emit("sub", constant(16), STACK_REG);
+			cg.emit.emitStore("$STR_NL", 0, STACK_REG);
+			cg.emit.emit("call", Config.PRINTF);
+			cg.emit.emit("add", constant(16), STACK_REG);
+			return null;
+		}
+	}
+
+	@Override
+	public Register returnStmt(ReturnStmt ast, Object arg) {
+		if (ast.arg() == null) {
+			cg.emit.emit("movl", "$0", "%eax");
+		} else {
+			Register reg = cg.eg.gen(ast.arg());
+			if (reg != RegisterManager.Register.EAX) {
+				cg.emit.emit("movl", reg, "%eax");
+				cg.rm.releaseRegister(reg);
+			}
+		}
+		cg.emit.emit("jmp", ((MethodSymbol) arg).getLabel() + "." + Config.EXIT);
+		return null;
+	}
 }

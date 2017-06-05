@@ -1,0 +1,9 @@
+Main.main
+  BB0 out:
+    a = new Main()
+    b = a
+  BB1 out:
+    a = new Main()
+    b = a
+
+

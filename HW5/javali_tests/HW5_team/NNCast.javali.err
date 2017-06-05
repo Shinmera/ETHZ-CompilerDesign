@@ -1,0 +1,95 @@
+Debug information for file: javali_tests/HW5_team/NNCast.javali
+AST Resulting From Parsing Stage:
+ClassDecl (name: Main, superClass: Object)
+| MethodDecl (argumentNames: [], argumentTypes: [], name: main, returnType: void)
+| | Seq ()
+| | | VarDecl (name: a, type: A)
+| | | VarDecl (name: b, type: B)
+| | | VarDecl (name: c, type: B)
+| | | VarDecl (name: x, type: int)
+| | Seq ()
+| | | Assign ()
+| | | | Var (name: x)
+| | | | IntConst (value: 3)
+| | | Assign ()
+| | | | Var (name: b)
+| | | | NewObject (typeName: B)
+| | | WhileLoop ()
+| | | | BinaryOp (operator: B_GREATER_OR_EQUAL)
+| | | | | Var (name: x)
+| | | | | IntConst (value: 0)
+| | | | Seq ()
+| | | | | Assign ()
+| | | | | | Var (name: c)
+| | | | | | Cast (typeName: B)
+| | | | | | | Var (name: a)
+| | | | | Assign ()
+| | | | | | Var (name: a)
+| | | | | | Var (name: b)
+| | | | | Assign ()
+| | | | | | Var (name: b)
+| | | | | | Cast (typeName: B)
+| | | | | | | Var (name: a)
+| | | | | Assign ()
+| | | | | | Var (name: x)
+| | | | | | BinaryOp (operator: B_MINUS)
+| | | | | | | Var (name: x)
+| | | | | | | IntConst (value: 1)
+ClassDecl (name: A, superClass: Object)
+ClassDecl (name: B, superClass: A)
+
+Phase nn failed because we expected to see:
+Main.main
+  BB0 out: [b]
+    x = 3: []
+    b = new B(): []
+  BB1 out: [b]
+  BB2 out: [b]
+    (x >= 0): [b]
+  BB3 out: [a, b]
+    c = (B)(a): [b]
+    a = b: [b]
+    b = (B)(a): [a, b]
+    x = (x - 1): [a, b]
+  BB4 out: [b]
+
+
+
+But we actually saw:
+Main.main
+  BB0 out: [b]
+    x = 3: []
+    b = new B(): []
+  BB1 out: []
+  BB2 out: []
+    (x >= 0): []
+  BB3 out: []
+    c = (B)(a): []
+    a = b: []
+    b = (B)(a): []
+    x = (x - 1): []
+  BB4 out: []
+
+
+
+The difference is:
+At line   5 /   5:
+<   BB1 out: [b]
+<   BB2 out: [b]
+<     (x >= 0): [b]
+<   BB3 out: [a, b]
+<     c = (B)(a): [b]
+<     a = b: [b]
+<     b = (B)(a): [a, b]
+<     x = (x - 1): [a, b]
+<   BB4 out: [b]
+>   BB1 out: []
+>   BB2 out: []
+>     (x >= 0): []
+>   BB3 out: []
+>     c = (B)(a): []
+>     a = b: []
+>     b = (B)(a): []
+>     x = (x - 1): []
+>   BB4 out: []
+

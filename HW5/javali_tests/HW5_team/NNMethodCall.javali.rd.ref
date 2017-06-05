@@ -1,0 +1,14 @@
+A.method
+  BB0 out:
+    a = new A()
+  BB1 out:
+    a = new A()
+
+
+Main.main
+  BB0 out:
+    b = c.method(...)
+  BB1 out:
+    b = c.method(...)
+
+

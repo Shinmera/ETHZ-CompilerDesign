@@ -1,0 +1,16 @@
+A.method
+  BB0 out:
+    a = new A[][2]
+  BB1 out:
+    a = new A[][2]
+
+
+Main.main
+  BB0 out:
+    b = c.method(...)
+    c = b[1]
+  BB1 out:
+    b = c.method(...)
+    c = b[1]
+
+

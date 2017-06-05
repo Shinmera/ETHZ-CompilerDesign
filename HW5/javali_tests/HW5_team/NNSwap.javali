@@ -1,0 +1,17 @@
+// Variable r1 and r2 are supposed to be non-null after field access.
+class Main {
+	void main() {
+	}
+	
+	void swap(Record r1, Record r2) {
+      int temp;
+   
+      temp = r1.a;
+      r1.a = r2.a;
+      r2.a = temp;
+   }
+}
+
+class Record {
+   int a;
+}
