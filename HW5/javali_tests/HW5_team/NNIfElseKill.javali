@@ -1,0 +1,44 @@
+// Switch multiple times between null and non-null between and within blocks.
+
+class Main {
+	void main() {
+		int x;
+        Main a;
+        Main b;
+        Main c;
+        
+        
+        c = new Main();
+        c = null;
+        x = 1;
+        
+        b = null;
+        
+        if (x > 0) {
+        	a = new Main();  
+        	b = null;
+        	a = b;
+        	b = c;
+        	c = new Main();
+        } else {
+        	a = c;
+        	a = null;
+        	a = b;
+        	a = new Main();
+        	a = c;
+        	c = null;
+        	while (x != 1 ) {
+        	
+        	c = new Main();
+        	c = null;
+        	a = new Main();
+        	c = a;
+        	
+        	x = 1;
+        	
+        	}
+        }
+        b = a;
+           
+	}
+}

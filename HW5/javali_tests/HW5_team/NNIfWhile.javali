@@ -1,0 +1,36 @@
+// Multiple if-else and while statements.
+class Main {
+	void main() {
+		int x;
+        Main a;
+        Main b;
+        Main c;
+        c = new Main();
+        
+        x = 1;
+        
+        b = null;
+        
+        if (x > 0) {
+        	a = new Main();  
+        	
+        	while (x != 0) {
+        		
+        		b = null;
+        		if (a != null) {
+        			c = a;
+        		}
+        		else {
+        			c = b;
+        		}
+        		
+        		x = x-1;
+        	}
+        	
+        } else {
+        	a = c;
+        }
+        b = a;
+           
+	}
+}

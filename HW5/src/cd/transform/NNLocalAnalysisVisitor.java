@@ -29,8 +29,9 @@ public class NNLocalAnalysisVisitor extends AstVisitor<VariableSymbol, Ast> {
 	public Map<Stmt, Set<VariableSymbol>> stmtStates = new HashMap<Stmt, Set<VariableSymbol>>();
 	public Map<BasicBlock, Set<VariableSymbol>> stmtBeforeConditionStates = new HashMap<BasicBlock, Set<VariableSymbol>>();
 	public Set<VariableSymbol> state;
+	public Set<VariableSymbol> out;
 	public NonNullAnalysis analysis;
-	Map<VariableSymbol, VariableSymbol> unresolved;
+	public Map<Stmt, Map<VariableSymbol, VariableSymbol>> unresolved;
 
 	/**
 	 * Loop over the statements and do local analysis.
@@ -38,13 +39,18 @@ public class NNLocalAnalysisVisitor extends AstVisitor<VariableSymbol, Ast> {
 	 * @param block
 	 * @param analysis
 	 */
-	public NNLocalAnalysisVisitor(BasicBlock block, Set<VariableSymbol> state, NonNullAnalysis analysis) {
+	public NNLocalAnalysisVisitor(BasicBlock block, Set<VariableSymbol> state, Set<VariableSymbol> out,
+			NonNullAnalysis analysis) {
 
 		this.state = state;
 		this.analysis = analysis;
+		this.out = out;
 
 		// Statements to resolve in this block, e.g. x = y
-		unresolved = analysis.toResolve.get(block);
+		unresolved = new HashMap<Stmt, Map<VariableSymbol, VariableSymbol>>(analysis.toResolve.get(block));
+		if (unresolved == null) {
+			unresolved = new HashMap<Stmt, Map<VariableSymbol, VariableSymbol>>();
+		}
 
 		for (Stmt stmt : block.stmts) {
 
@@ -54,9 +60,10 @@ public class NNLocalAnalysisVisitor extends AstVisitor<VariableSymbol, Ast> {
 			// Visit statement.
 			stmt.accept(this, stmt);
 
-			System.out.println("stmt: " + stmt.toString() + " state " + state.toString());
+			
 		}
 
+		out.addAll(state);
 	}
 
 	/*************
@@ -86,19 +93,20 @@ public class NNLocalAnalysisVisitor extends AstVisitor<VariableSymbol, Ast> {
 			// TORESOLVE: Check if variable is contained in state.
 			if (right instanceof Var || right instanceof Cast) {
 
-				//if (unresolved.containsKey(right)) {
-					if (state.contains(rightSym)) {
-						state.add(leftSym);
-					} else {
-					//	state.remove(leftSym);
-					}
-				//}
+				if (state.contains(rightSym) || !unresolved.containsKey((Stmt) parent)) {
+					state.add(leftSym);
+					//state.add(rightSym);
+				} else {
+					state.remove(leftSym);
+					out.remove(leftSym);
+				}
 			}
 
 			// KILL
 			if (right instanceof NullConst || right instanceof Field || right instanceof Index
 					|| right instanceof BuiltInRead || right instanceof MethodCallExpr) {
 				state.remove(leftSym);
+				out.remove(leftSym);
 			}
 		}
 
@@ -186,7 +194,7 @@ public class NNLocalAnalysisVisitor extends AstVisitor<VariableSymbol, Ast> {
 
 		VariableSymbol var = ast.arg().accept(this, parent);
 		if (var != null) {
-			 //state.add(var);
+			// state.add(var);
 		}
 
 		return var;

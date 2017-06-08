@@ -2,6 +2,7 @@ package cd.transform;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import cd.ir.Ast;
 import cd.ir.AstVisitor;
@@ -27,6 +28,8 @@ public class NonNullAnalysisVisitor extends AstVisitor<VariableSymbol, Ast> {
 	public Map<String, VariableSymbol> gen = new HashMap<String, VariableSymbol>();
 	public Map<String, VariableSymbol> kill = new HashMap<String, VariableSymbol>();
 	public Map<VariableSymbol, VariableSymbol> toResolve = new HashMap<VariableSymbol, VariableSymbol>();
+	public Map<Stmt, Map<VariableSymbol, VariableSymbol>> unresolvedStmts = new HashMap<Stmt, Map<VariableSymbol, VariableSymbol>>();
+	public Map<BasicBlock, Map<Stmt, Map<VariableSymbol, VariableSymbol>>> unresolvedStmtsInBlock = new HashMap<BasicBlock, Map<Stmt, Map<VariableSymbol, VariableSymbol>>>();
 	private NonNullAnalysis analysis;
 
 	/**
@@ -37,6 +40,10 @@ public class NonNullAnalysisVisitor extends AstVisitor<VariableSymbol, Ast> {
 	 */
 	public NonNullAnalysisVisitor(BasicBlock block, NonNullAnalysis analysis) {
 		this.analysis = analysis;
+		unresolvedStmts = analysis.toResolve.get(block);
+		if (unresolvedStmts == null) {
+			unresolvedStmts = new HashMap<Stmt, Map<VariableSymbol, VariableSymbol>>();
+		}
 
 		// Loop over statements.
 		for (Stmt stmt : block.stmts) {
@@ -44,7 +51,7 @@ public class NonNullAnalysisVisitor extends AstVisitor<VariableSymbol, Ast> {
 			stmt.accept(this, stmt);
 
 		}
-
+		unresolvedStmtsInBlock.put(block, unresolvedStmts);
 	}
 
 	/*************
@@ -66,13 +73,16 @@ public class NonNullAnalysisVisitor extends AstVisitor<VariableSymbol, Ast> {
 
 			// GEN: Get new and this statements.
 			if (right instanceof ThisRef || right instanceof NewObject || right instanceof NewArray) {
-
 				gen.put(leftSym.name, leftSym);
 			}
 
 			// TORESOLVE
 			if (right instanceof Var || right instanceof Cast) {
+
 				toResolve.put(leftSym, rightSym);
+				HashMap<VariableSymbol, VariableSymbol> tr = new HashMap<VariableSymbol, VariableSymbol>();
+				tr.put(leftSym, rightSym);
+				unresolvedStmts.put((Stmt) parent, tr);
 			}
 
 			// KILL
@@ -167,9 +177,9 @@ public class NonNullAnalysisVisitor extends AstVisitor<VariableSymbol, Ast> {
 
 		return null;
 	}
-	
+
 	public VariableSymbol cast(Cast ast, Ast parent) {
-		
+
 		VariableSymbol var = ast.arg().accept(this, parent);
 		return var;
 	}

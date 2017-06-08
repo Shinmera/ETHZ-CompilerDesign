@@ -1,0 +1,32 @@
+// Test field and array index access.
+class Main {
+	void main() {
+	
+		Record r;
+		int x;
+		
+		if (true){
+			r = new Record();
+		}
+		else {
+			r = null;
+		}
+		r.a = new Field[10];
+		x = 0;
+		while (x < 10 ) {
+		
+			r.a[x].b = x;
+		}
+		
+		
+	}
+	
+}
+
+class Record {
+   Field[] a;
+
+}
+class Field {
+ 	int b;
+}

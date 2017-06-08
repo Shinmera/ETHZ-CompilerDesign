@@ -1,0 +1,21 @@
+// Test field access.
+class Main {
+	int i2;
+   void main() {
+   		Moo moo;
+   		Woo woo;
+   
+		moo = woo.m;
+		woo = moo.w;
+   }
+}
+class Woo {
+	Moo m;
+}
+
+class Moo extends Woo {
+	Woo w;
+	Woo method () {
+		return w;
+	}
+}
