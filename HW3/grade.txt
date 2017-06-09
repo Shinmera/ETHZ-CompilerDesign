@@ -1,0 +1,40 @@
+12/25
+
+Incomplete circular inheritance check, leading to infinite loops -2
+
+Arrays are not handled at all... -3
+    Not in the symbol table
+    Not considered in subtype check
+    No checks for indexing, array creation, ...
+    There is one place where arrays are considered (assingments),
+    but there they are handled wrongly (arrays should be invariant)
+
+Missing type checks: -1
+    New array
+    Array indexing
+
+NPE for return-nothing stmts -0.5
+
+Bug in SemanticPopulatorAstVisitor: -1
+	ast.type not set for method calls, leading to calls to results of calls
+	interpreted as calls to "this"...
+    Same for field accesses, leading to NPEs
+    Same for "this" refs, leading to NPEs
+
+Incomplete invalid start point check: params not checked -0.5
+
+null type not in symbol table, leading to NPEs -1
+
+Incorrect subtype check: -1
+    Object class not handled correctly
+    null not handled correctly
+
+Buggy invalid-override check: methods sometimes not found in superclasses -0.5
+
+Incorrect type check for < <= >= > ops -0.5
+
+Missing type check for while condition -0.5
+
+Incorrect type check for equality: left may be subtype of right or vice versa -0.5
+
+Incorrect return stmt check: returns in if-else ignored -1
